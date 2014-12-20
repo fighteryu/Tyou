@@ -5,8 +5,8 @@
 
 # File Name: app.py
 
+import os
 from flask import Flask, g, request, jsonify, render_template
-
 import config
 from models import db, gen_sidebar, User
 from views import MODULES
@@ -45,6 +45,11 @@ def configure_before_handlers(app):
     @app.before_first_request
     def init_db():
         db.create_all()
+
+    @app.before_first_request
+    def create_upload_folder():
+        if not os.path.exists(app.config["UPLOAD_FOLDER"]):
+            os.makedirs(app.config["UPLOAD_FOLDER"])
 
     @app.before_request
     def get_config():

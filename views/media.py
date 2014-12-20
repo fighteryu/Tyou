@@ -6,9 +6,10 @@
 
 """
 import os
+import json
 from datetime import datetime
 import hashlib
-from flask import Blueprint, g, request, Response, abort, jsonify,\
+from flask import Blueprint, g, request, abort, jsonify,\
     send_from_directory
 from werkzeug import secure_filename
 
@@ -33,7 +34,7 @@ def mediamgnt(filename=None):
             )
 
     elif request.method == "POST":
-        f = request.files["file"]
+        f = request.files["files[]"]
         if f:
             filename = secure_filename(f.filename)
             local_filename = Media.new_local_filename(filename)
@@ -55,10 +56,8 @@ def mediamgnt(filename=None):
             )
 
             media.save()
-            return jsonify(
-                success=True,
-                data={"filename": media.filename,
-                      "fileid": media.fileid})
+            return json.dumps(
+                {"files": []})
 
     elif request.method == "DELETE":
         removelist = request.json
