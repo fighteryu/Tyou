@@ -1,0 +1,169 @@
+{%extends 'part/adminbase'%}
+{%block title%}Admin Blog--新文章{%endblock title%}
+{%block extraadminhead%}
+<script type="text/javascript" src="/static/js/lib/ckeditor/ckeditor.js"></script>
+{%endblock extraadminhead%}
+
+{%block admincontent%}     
+	<form action="" method="post">
+		<input type="hidden" name="post_id" id="post_id" {%if post.post_id %}value="{{post.post_id}}" {%endif%}>
+		<div class="input-group">
+			<span class="input-group-addon">标题</span>
+			<input type="text"  name="title" id="title" value="{{post.title}}" class="form-control" placeholder="Title">
+		</div><div class="input-group">
+			<span class="input-group-addon">Url</span>
+			<input type="text"   name="url" id="url" value="{{post.url}}" class="form-control">
+		</div><div class="input-group">
+			<span class="input-group-addon">标签</span>
+			<input type="text" name="tags" id="tags" value="{{",".join(post.get_tags())}}" class="form-control" placeholder="逗号隔开">
+		</div><div class="input-group">
+			<span class="input-group-addon">keywords</span>
+			<input type="text" name="keywords" id="keywords" value="{{post.keywords}}" class="form-control" placeholder="Meta keywords for search engine,separated by comma">
+		</div><div class="input-group">
+			<span class="input-group-addon">content</span>
+			<input type="text" name="metacontent" id="metacontent" value="{{post.metacontent}}" class="form-control" placeholder="Meta content for search engine">
+		</div><div class="btn-group">
+			<button type="button" class="btn btn-primary menu" id="allow_comment">{%if post.allow_comment==True%}allow comment{%else%}deny comment{%endif%}</button>
+			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+				<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a class="dropmenu" href="#">allow comment</a></li>
+				<li><a class="dropmenu" href="#">deny comment</a></li>	
+			</ul>
+		</div><div class="btn-group">
+			<button type="button" class="btn btn-primary menu" id="need_key">{%if post.need_key==True%}need key{%else%}deny key{%endif%}</button>
+			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+				<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a class="dropmenu" href="#">need key</a></li>
+				<li><a class="dropmenu" href="#">deny key</a></li>	
+			</ul>
+		</div><div class="btn-group">
+			<button type="button" class="btn btn-primary menu" id="allow_visit">{%if post.allow_visit==True%}allow visit{%else%}deny visit{%endif%}</button>
+			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+				<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a class="dropmenu" href="#">allow visit</a></li>
+				<li><a class="dropmenu" href="#">deny visit</a></li>	
+			</ul>
+		</div><div class="btn-group">
+			<button type="button" class="btn btn-primary menu" id="is_original">{%if post.is_original==True%}is original{%else%}not original{%endif%}</button>
+			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+				<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu">
+				<li><a class="dropmenu" href="#">is original</a></li>
+				<li><a class="dropmenu" href="#">not original</a></li>	
+			</ul>
+		</div><button class="btn btn-primary" id="submit">Submit</button><button class="btn btn-primary" id="checkpost">预览</button><button class="btn btn-primary" onclick="window.open('/admin/mediamgnt');return false" >文件管理</button>
+	</form>
+
+
+	<textarea id="editor" >{{post.content}}</textarea>
+</div>
+{%endblock admincontent%}
+{%block endscript%}
+<script type="text/javascript">
+$(document).ready(function(){
+	editor = CKEDITOR.replace( 'editor');
+	$('#submit').click(submitEvent);
+	$("#checkpost").click(turnToPage);
+	initClick();
+});
+
+function submitEvent(){
+	var content=editor.getData();
+	$("#url").val($("#url").val().trim());
+	$("#title").val($("#title").val().trim());
+	$("#tags").val($("#tags").val().trim());
+	$("#keywords").val($("#keywords").val().trim());
+	$("#metacontent").val($("#metacontent").val().trim());
+
+	var data={};
+	data.title=$("#title").val();
+	if(data.title==""){alert("no title!");return false;}
+	data.url=$("#url").val();
+	if(data.url==""){alert("no url!");return false;}
+	data.tags=$("#tags").val();
+	data.content=content;
+	data.keywords=$("#keywords").val();
+	data.metacontent=$("#metacontent").val();
+	if($("#allow_comment").text()=="allow comment"){data.allow_comment=true}else{data.allow_comment=false};
+	if($("#allow_visit").text()=="allow visit"){data.allow_visit=true}else{data.allow_visit=false};
+	if($("#is_original").text()=="is original"){data.is_original=true}else{data.is_original=false};
+	if($("#need_key").text()=="need key"){data.need_key=true}else{data.need_key=false};
+
+	// data.allow_comment=$("#allow_comment").is(":checked");
+	// data.allow_visit=$("#allow_visit").is(":checked");
+	data.post_id=parseInt($("#post_id").val());
+	data=JSON_stringify(data,false);
+	$.ajax({
+		type:"post",
+		contentType:"application/json",
+		url:'/admin/post',
+		data:data,
+		success:function(data){
+			var message="<span id='tmp'>文章保存成功，你可以</span><a target='view_window' href='/page/"+$("#url").val();
+			message+="'>查看文章</a>";
+			$("#message").html("");
+			$("#message").html(message);
+			$("#tmp").fadeOut(3000);
+			$("#post_id").val(String(data.post_id));
+
+		}});
+	return false;
+}
+
+function turnToPage(){
+	if($("#post_id").val()!=null){
+		window.open("/admin/overview/"+$("#post_id").val());
+	}
+	else{
+		return false;
+	}
+	return false;
+}
+function initClick(){
+	$(".dropmenu").click(function(){
+		var choosecontent=$(this).text();
+		var obj=$(this).parent().parent().parent().children(".menu").text(choosecontent);
+	});
+	//check is the url is in use
+	$("#url").blur(function(){
+		if($("#url").val().trim()!="" && $("#post_id").val()==""){
+			$.ajax({
+				type :"get",
+				url:"/admin/post/"+$("#url").val().trim()+"/inplace",
+				success:function(data){
+					if(data.in_place==true){
+						$("#url").parent().addClass("has-error");
+					}
+					else{
+						$("#url").parent().removeClass("has-error");
+					}
+				}
+
+			});
+		}
+	});
+	$(function () {
+		$(document).bind('keydown', function (event) {
+		if (event.ctrlKey || event.metaKey) {
+			switch (String.fromCharCode(event.which).toLowerCase()) {
+					case 's':
+						event.preventDefault();
+						$("#submit").click();
+						return false;
+				}
+			}
+		});
+	});
+
+
+}
+
+ </script>
+{%endblock  endscript%}

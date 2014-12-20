@@ -1,0 +1,38 @@
+{% macro list_post_simple(post) %}
+<div class="col-md-3">
+	<div class="calendar">
+		<div class="day">{{post.create_time.strftime("%d")}}</div>
+		<div class="month-year">
+			<div class="year">{{post.create_time.strftime("%Y")}}</div>
+			<div class="month">{{post.create_time.strftime("%B")}}</div>
+		</div>
+	</div>
+	<div class="tagcloud clearfix">
+		{%for tag in post.get_tags()%}
+		<div class="tag">
+		<a href="/search?tagname={{tag|urlencode}}">
+			{{tag}}
+		</a>
+		</div>			
+		{%endfor%}
+	</div>
+</div>
+<div class="col-md-9">
+	<header>
+		<h2>
+			<a href="/page/{{post.url}}">
+			{%if post.need_key%}
+				<span class="glyphicon glyphicon-lock"></span>
+			{%endif%}{{post.title}}
+			</a>
+		</h2>
+	</header>
+	<div class="divider"></div>
+{%if post.need_key%}
+	<div class="text-danger clearfix"><em>本文已经被加密，请输入密码查看</em></div>
+{%else%}
+	<article class="postcontent .clearfix">{{post.content|striptags|truncate(length=300, killwords=True, end='.......')|e}}</article>
+{%endif%}
+	<div class="pull-right seemore"><a href="/page/{{post.url}}">阅读全文&gt;&gt;&gt;</a></div>	
+</div>
+{% endmacro %}

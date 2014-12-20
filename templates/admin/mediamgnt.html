@@ -1,0 +1,184 @@
+{%extends "part/adminbase"%}
+{%block title%}Admin Blog--文件{%endblock title%}
+{%block admincontent%}
+<iframe style="display:none" id="hidden-frame" name="hidden-frame"></iframe>
+<form method="POST" enctype="multipart/form-data" name="submitfileform" id="submitfileform" target="hidden-frame" action="/media">
+	<div class="input-group">
+		<input type="submit" class="btn btn-primary" id="submitfile" value="submit">
+		<input type="file" class="btn btn-primary" id="file" name="file" title="file">
+	</div>
+</form>
+
+<div class="progress progress-striped">
+  <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+    <span class="sr-only">0% Complete</span>
+  </div>
+</div>
+
+
+<table class="widetable table table-condensed table-striped table-bordered table-hover">
+	<thead>
+		<tr>
+			<th class="check-column" scope="col" style="">
+			<button class="btn btn-primary btn-xs" id="deletemedia">删除</button>
+			<button class="btn btn-primary btn-xs" id="reverse">隐藏/显示</button>
+			</th>
+			<th>日期</th>
+			<th>文件名</th>
+			<th>大小</th>
+			<th>version</th>
+			<th>允许显示</th>
+		</tr>
+	</thead>
+	<tbody>
+		{%for media in medialist%}
+		<tr>
+			<th>
+				<input class="page" type="checkbox" value="on" filename="{{media.filename}}" fileid="{{media.fileid}}">
+			</th>
+			<td>
+				<div class="time">{{media.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
+			</td>
+			<td>
+				<a href="/media/{{media.filename}}?fileid={{media.fileid}}">{{media.filename}}</a>
+			</td>
+			<td>
+				<div class="filesize">
+					{{media.size}}				
+				</div>
+			</td>
+			<td>{{media.version}}</td>
+			{%if media.display%}
+			<td>允许</td>
+			{%else%}
+			<td>不允许</td>
+			{%endif%}
+		</tr>
+		{%endfor%}				
+	</tbody>
+</table>
+
+{%from 'part/pager' import pager_funct%}
+{{pager_funct('/admin/mediamgnt',pager)|safe}}
+{%endblock admincontent%}
+
+{%block  endscript%}
+<script type="text/javascript" src="/static/js/lib/bootstrap.file-input.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	$('input[type=file]').bootstrapFileInput();
+	$('.file-inputs').bootstrapFileInput();
+	$(".dropmenu").click(function(){
+		var choosecontent=$(this).text();
+		var obj=$(this).parent().parent().parent().children(".menu").text(choosecontent);
+	});
+	$("[type=checkbox]").click(function(){
+		if ($(this).attr("checked")==undefined) { 
+			$(this).attr("checked","checked");
+		} else {
+			$(this).attr("checked",false);
+		}
+	});
+
+	$(".filesize").each(function(){
+		$(this).text(size_format($(this).text()));		
+	})
+
+	$("#submitfile").click(function(){
+		$(".progress-bar").css("width","0%");
+		if($("#file").val()==""){
+			$("#file").parent().removeClass("btn-primary");
+			$("#file").parent().addClass("btn-danger");
+		}
+		else{
+			$("#file").parent().removeClass("btn-danger");
+			$("#file").parent().addClass("btn-primary");
+			fileProgress();
+			// $("#submitfileform").submit();
+		}
+		return true;
+	});
+	$("#deletemedia").click(function(){
+		var removelist=new Array;
+		$(".page").each(function(){
+			if($(this).attr("checked")=="checked"){
+				removelist.push({filename:$(this).attr("filename"),fileid:$(this).attr("fileid")});
+			}
+		});
+		$.ajax({
+			type:"delete",
+			contentType:"application/json",
+			url:"/media",
+			data:JSON_stringify(removelist),
+			success:function(){
+				document.location.reload(true);
+			},
+			error:function(){
+				alert('error')
+			}
+		})
+	});
+
+	$("#reverse").click(function(){
+		var reverselist=new Array;
+		$(".page").each(function(){
+			if($(this).attr("checked")=="checked"){
+				reverselist.push({filename:$(this).attr("filename"),fileid:$(this).attr("fileid")});
+			}
+		});
+		$.ajax({
+			type:"post",
+			contentType:"application/json",
+			url:"/media/reverse",
+			data:JSON_stringify(reverselist),
+			success:function(){
+				document.location.reload(true);
+			},
+			error:function(){
+				alert('error')
+			}
+		});
+	});
+
+
+
+});
+function fileProgress(){
+	var formData = new FormData($('form')[0]);
+	var totalurl=$("#submitfileform").attr("action")
+	
+	$.ajax({
+		url: totalurl,  //Server script to process data
+		type: 'POST',
+		xhr: function() {  // Custom XMLHttpRequest
+			var myXhr = $.ajaxSettings.xhr();
+			if(myXhr.upload){ // Check if upload property exists
+				myXhr.upload.addEventListener('progress',progressHandlingFunction, false); // For handling the progress of the upload
+			}
+			return myXhr;
+		},
+		beforeSend: function(xhr){xhr.setRequestHeader('X-Test-Header', 'test-value');},
+		success:function(data){
+			setTimeout("window.location.reload()",2000);
+			
+		},
+		error: function(){
+			setTimeout("window.location.reload()",2000);
+		},
+		// Form data
+		data: formData,
+		//Options to tell jQuery not to process data or worry about content-type.
+		cache: false,
+		contentType: false,
+		processData: false
+	});
+}
+function progressHandlingFunction(e){
+	if(e.lengthComputable){
+		// $('.progress-bar').attr({value:e.loaded,max:e.total});
+		$('.progress-bar').css("width",String(e.loaded/e.total *100 )+"%");
+	}
+}
+
+</script>
+{%endblock  endscript%}

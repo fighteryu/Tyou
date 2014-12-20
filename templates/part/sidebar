@@ -1,0 +1,59 @@
+<div class="sidebar">
+{%if sidebar.announce%}
+    <div class="announcement widget">
+        <strong>公告</strong>
+        <div class="announcebody">
+            {{sidebar.announce.content|truncate(length=sidebar.announce_length, killwords=True, end='.......')|safe}}
+            <div class="pull-right seemore">
+          <a href="/page/{{sidebar.announce.url}}">查看&gt;&gt;&gt;</a>
+        </div>
+        </div>
+       
+        
+        
+    </div>
+{%endif%}
+{%if sidebar.taglist%}
+	<div class="tags widget">
+        <strong>标签</strong>
+        <div class="tagcloud">
+        {%for tag in sidebar.taglist%}
+         <div class="tag">
+        <a href="/search?tagname={{tag.name|urlencode}}">
+           {{tag.name}}
+        </a>
+        </div>
+        {%endfor%}
+        </div>
+    </div>
+{%endif%}
+{%if sidebar.commentlist%}
+    <div class="comments widget">
+        <strong>最近评论</strong>
+        {%for item in sidebar.commentlist%}
+        <div class="c-list">
+            <div class="c-meta">
+                <i class="c-nickname">{{item.nickname}}</i> 在
+                <span class="c-time">{{item.create_time.strftime("%Y-%m-%d %H:%M")}}</span> :
+            </div>
+            <div class="c-content"><a href="/page/{{item.url}}">{{item.content}}</a></div>
+        </div>
+        {%endfor%}
+
+    </div>
+{%endif%}
+{%if sidebar.linklist%}
+    <div class="links widget">
+        <strong>链接</strong>
+        <div id="linkfield">
+            <ul>
+            {%for link in sidebar.linklist%}
+            <li><a href="{{link.href}}">{{link.name}}</a></li>
+            {%endfor%}
+            </ul>
+        </div>
+    </div>
+{%endif%}
+
+</div>
+

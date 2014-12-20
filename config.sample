@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+# coding: utf-8
+"""
+    config.py
+    ~~~~~~~~~~
+
+"""
+DEBUG = False
+########
+# config for database
+username = ""
+password = ""
+database = ""
+port = 3306
+mysqlhost = "localhost"
+SQLALCHEMY_DATABASE_URI = "mysql://"+username+":"+password+"@"+mysqlhost\
+    + ":"+str(port)+'/'+database
+
+# Set upload folder to current_folder /uploads
+import os
+work_dir = os.path.dirname(os.path.realpath(__file__))
+UPLOAD_FOLDER = os.path.join(work_dir, "uploads")
+
+########
+# default blog settings, you may override this in admin page
+BLOGNAME = "Tyou"
+BLOGURL = "http://127.0.0.1:8080"
+ANNOUNCE_ID = -1
+ABOUT_ID = -1
+TAG_COUNT = 15
+COMMENT_COUNT = 15
+LINK_COUNT = 15
+PER_PAGE = 15
+ANNOUNCE_LENGTH = 200
+ADMIN_ITEM_COUNT = 20

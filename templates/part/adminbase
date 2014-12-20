@@ -1,0 +1,25 @@
+{%extends 'part/base'%}
+
+{%block extrahead%}
+	{%block extraadminhead%}
+	{%endblock extraadminhead%}
+{%endblock extrahead%}
+
+{%block content%}
+<div class="container admincontainer">
+	<nav class="navbar navbar-default" role="navigation">
+		<div class="collapse navbar-collapse">
+			<ul class="nav navbar-nav">
+				<li {%if admin_url=="setting"%}class="active"{%endif%}><a href="/admin/setting">参数设置</a></li>
+				<li {%if admin_url=="pagelist"%}class="active"{%endif%}><a href="/admin/postlist">文章管理</a></li>
+				<li {%if admin_url=="post"%}class="active"{%endif%}><a href="/admin/post">新文章</a></li>
+				<li {%if admin_url=="commentmgnt"%}class="active"{%endif%}><a href="/admin/commentmgnt">评论</a></li>
+				<li {%if admin_url=="linkmgnt"%}class="active"{%endif%}><a href="/admin/linkmgnt">链接</a></li>
+				<li {%if admin_url=="mediamgnt"%}class="active"{%endif%}><a href="/admin/mediamgnt">文件</a></li>
+			</ul>
+		</div>
+	</nav>
+	{%block admincontent%}
+	{%endblock admincontent%}
+</div>
+{%endblock content%}

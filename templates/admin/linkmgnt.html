@@ -1,0 +1,209 @@
+{%extends "part/adminbase"%}
+{%block title%}Admin Blog--链接{%endblock title%}
+
+{%block admincontent%}
+<form action="/link/" method="post">
+	<div class="input-group">
+		<span class="input-group-addon">名称</span>		
+		<input type="text"  name="name" id="name" value="" class="form-control" placeholder="链接名称">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">链接</span>		
+		<input type="text"  name="href" id="href" value="" class="form-control" placeholder="链接地址">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">描述</span>		
+		<input type="text"  name="description" id="description" value="" class="form-control" placeholder="链接描述">
+	</div>	
+
+	<div class="btn-group">
+		<button type="button" class="btn btn-primary menu" id="display">display</button>
+		<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+			<span class="caret"></span>
+		</button>
+		<ul class="dropdown-menu">
+			<li><a class="dropmenu" href="#">display</a></li>
+			<li><a class="dropmenu" href="#">deny display</a></li>	
+		</ul>
+	</div><button class="btn btn-primary" id="submit">Submit</button>	
+</form>
+
+<table class="widetable table table-condensed table-striped table-bordered table-hover">
+	<thead>
+		<tr>
+			<th class="check-column" scope="col" style="">
+			<button class="btn btn-primary btn-xs" id="deletelink">删除</button>
+			<button class="btn btn-primary btn-xs" id="reverse">隐藏/显示</button>
+			</th>
+			<th>名称</th>
+			<th>创建时间</th>
+			<th>描述</th>
+			<th>允许显示</th>
+		</tr>
+	</thead>
+	<tbody>
+		{%for link in linklist%}
+		<tr>
+			<td>
+				<input class="page" type="checkbox" value="on" linkid="{{link.link_id}}">
+			</td>
+			<td>
+				<div class="name"><a href="{{link.href}}">{{link.name}}</a></div>
+			</td>
+			<td>
+				<div class="time">{{link.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
+			</td>
+			<td>
+				<div class="description">{{link.description}}</div>
+			</td>
+			{%if link.display%}
+			<td>允许</td>
+			{%else%}
+			<td>不允许</td>
+			{%endif%}
+		</tr>
+		{%endfor%}				
+	</tbody>
+</table>
+
+{%endblock admincontent%}
+
+{%block endscript%}
+<script type="text/javascript">
+$(document).ready(function(){
+	initClick();
+	$("#submit").click(submitEvent);
+	$("#deletelink").click(deleteEvent);
+	$("#reverse").click(reverseEvent);
+});
+
+function submitEvent(){
+	var data={};
+	var has_error=false;
+	$("#name").val($("#name").val().trim());
+	$("#href").val($("#href").val().trim());
+	$("#description").val($("#description").val().trim());
+	data.name=$("#name").val();
+	data.href=$("#href").val();
+	data.description=$("#description").val();
+	if($("#display").text()=="display"){
+		data.display=true;
+	}else{
+		data.display=false;
+	}
+
+	if(data.name=="" || data.href==""){
+		has_error=true;
+		return false;
+	}
+	else{
+		data=JSON_stringify(data,false);
+		$.ajax({
+			type:'post',
+			url:'/link/',
+			contentType:"application/json",
+			data:data,
+			success:function(data){
+				var message="<span id='tmp'>链接保存成功</span>"
+				$("#message").html("");
+				$("#message").html(message);
+				$("#tmp").fadeOut(2000);
+				setTimeout("window.location.reload()",2000);
+			}
+		});
+	}
+	return false;
+}
+
+function deleteEvent(){
+	var removelist=new Array;
+	$(".page").each(function(){
+		if($(this).attr("checked")=="checked"){
+			removelist.push($(this).attr("linkid"));
+		}
+	});
+	$.ajax({
+		type:"post",
+		contentType:"application/json",
+		url:"/link/delete",
+		data:JSON_stringify(removelist),
+		success:function(){
+			var message="<span id='tmp'>链接删除成功</span>"
+				$("#message").html("");
+				$("#message").html(message);
+				$("#tmp").fadeOut(2000);
+				setTimeout("window.location.reload()",2000);
+		},
+		error:function(xhr, ajaxOptions, thrownError){
+			alert("error");
+		}
+	});
+	return false;
+}
+function reverseEvent(){
+var reverselist=new Array;
+	$(".page").each(function(){
+		if($(this).attr("checked")=="checked"){
+			reverselist.push($(this).attr("linkid"));
+		}
+	});
+	$.ajax({
+		type:"post",
+		contentType:"application/json",
+		url:"/link/reverse",
+		data:JSON_stringify(reverselist),
+		success:function(){
+			var message="<span id='tmp'>链接显示切换成功</span>"
+				$("#message").html("");
+				$("#message").html(message);
+				$("#tmp").fadeOut(2000);
+				setTimeout("window.location.reload()",2000);
+		},
+		error:function(xhr, ajaxOptions, thrownError){
+			alert("error");
+		}
+	});
+	return false;
+}
+
+
+function initClick(){
+	$("[type=checkbox]").click(function(){
+		if ($(this).attr("checked")==undefined) { 
+			$(this).attr("checked","checked");
+		} else {
+			$(this).attr("checked",false);
+		}
+	});
+	$(".dropmenu").click(function(){
+		var choosecontent=$(this).text();
+		var obj=$(this).parent().parent().parent().children(".menu").text(choosecontent);
+	});
+
+	$("#name").blur(function(){
+		if($("#name").val()==""){
+			$("#name").parent().addClass("has-error");
+		}
+		else{
+			$("#name").parent().removeClass("has-error");
+		}
+	});
+	$("#href").blur(function(){
+		if($("#href").val()==""){
+			$("#href").parent().addClass("has-error");
+		}
+		else{
+			$("#href").parent().removeClass("has-error");
+		}
+	});
+	$("#description").blur(function(){
+		if($("#description").val()==""){
+			$("#description").parent().addClass("has-error");
+		}
+		else{
+			$("#description").parent().removeClass("has-error");
+		}
+	});
+}
+</script>
+{%endblock endscript%}

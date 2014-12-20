@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	{%set jquery_version="1.10.2"%}
+	{%set less_version="1.5.0"%}
+	<head>
+		<title>{%block title%}{{blogname}}{%endblock title%}</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		{%block meta%}
+		{%endblock meta%}
+		<link rel="alternate" type="application/rss+xml" title="文章订阅" href="http://blog.fzleeblog.org/rss">
+		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css"/>
+		<script type="text/javascript" src="/static/js/lib/jquery-{{jquery_version}}.min.js"></script>
+		<script type="text/javascript" src="/static/js/lib/bootstrap.js"></script>
+		<script type="text/javascript" src="/static/js/main.js"></script>
+		{%block extrahead%}{%endblock extrahead%}
+	</head>
+	<body>
+	{%block topbar%}{%include "/part/topbar"%}{%endblock topbar%}
+		{%block content%}
+		<div class="container maincontainer">
+		<div class="row">
+			<div class="col-md-9">
+				<div class="mainbody">
+				{%block postbody%}
+					
+				{%endblock postbody%}
+				</div>
+			</div>
+			<div class="col-md-3">
+				{%block sidebar%}{%include 'part/sidebar'%}{%endblock sidebar%}
+			</div>
+		</div>
+		</div>
+		{%endblock content%}
+		{%block  endscript%}{%endblock  endscript%}
+	</body>
+
+</html>
+
+

@@ -1,0 +1,43 @@
+{%extends 'part/base'%}
+{%from "part/post_item_simple" import list_post_simple%}
+{%block title%}
+	{%if searchtype == "textsearch"%}文本搜索{%elif searchtype == "tagsearch"%}标签搜索{%endif%}--{{searchcontent}}
+{%endblock title%}
+{%block postbody%}
+	{%if searchtype == "textsearch"%}
+		<div class="searchform" style="">
+				<input type="text" id="searchcontent2" placeholder="文本搜索" value="{{searchcontent}}">
+				<input type="button" _param="keyword" id="dosearch2" name="searchbutton" class="btn btn-primary" value="文本搜索" onclick="doSearch2('{{searchtype}}');return false;"/>
+		</div>
+	{%elif searchtype == "tagsearch"%}
+		<div class="searchform" style="">
+				<input type="text" id="searchcontent2" placeholder="标签搜索" value="{{searchcontent}}">
+				<input type="button" _param="tagname" id="dosearch2" name="searchbutton" class="btn btn-primary" value="标签搜索" onclick="doSearch2('{{searchtype}}');return false;"/>
+		</div>
+	{%endif%}
+	{%if postlist%}
+		{%for eachpost in postlist%}
+		<div class="row outline widget">
+			{{list_post_simple(eachpost)|safe}}
+		</div>
+		{%endfor%}
+	{%else%}
+	<div class="container" style="background-image: url('/static/img/not_found.png');background-position: 50% 50%, 50% 50%;background-repeat: no-repeat;margin: 20px 0px 0px;min-height: 450px; width:100%">
+	</div>
+	{%endif%}
+{%from 'part/pager' import pager_funct%}
+{{pager_funct('/search',pager)|safe}}
+{%endblock postbody%}
+
+
+{%block endscript%}
+<script type="text/javascript">
+$(document).ready(function(){
+	$("#searchcontent2").bind('keyup',function(e){
+    	if(e.keyCode=='13'){
+			$("#dosearch2").click();
+		}
+	});
+});
+</script>
+{%endblock endscript%}

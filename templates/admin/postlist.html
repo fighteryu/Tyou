@@ -1,0 +1,83 @@
+{%extends "part/adminbase"%}
+{%block title%}Admin Blog--文章管理{%endblock title%}
+{%block admincontent%}
+<table class="widetable table table-condensed table-striped table-bordered table-hover">
+	<thead>
+		<tr>
+			<th class="check-column" scope="col" style="">
+			<button class="btn btn-primary btn-xs" id="deletepost">删除</button>
+			</th>
+			<th>日期</th>
+			<th>标题</th>
+			<th class="num" scope="col">原创
+			</th>
+			<th>状态</th>
+			<th>允许评论</th>
+		</tr>
+	</thead>
+	<tbody>
+		{%for post in postlist%}
+		<tr>
+			<th>
+				<input class="page" type="checkbox" value="on" name="{{post.post_id}}">
+			</th>
+			<td>
+				<div class="time">{{post.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
+			</td>
+			<td>
+				<a href="/admin/post/{{post.post_id}}">[编辑]</a>
+				<a href="/admin/overview/{{post.post_id}}">[预览]</a>
+				<a href="/page/{{post.url}}">{{post.title}}</a>
+			</td>
+			<td>{%if post.is_original%}是{%else%}否{%endif%}</td>
+			{%if post.allow_visit%}
+			<td>发布</td>
+			{%else%}
+			<td>不发布</td>
+			{%endif%}
+			{%if post.allow_comment%}
+			<td>允许</td>
+			{%else%}
+			<td>不允许</td>
+			{%endif%}
+		</tr>
+		{%endfor%}				
+	</tbody>
+</table>
+{%from 'part/pager' import pager_funct%}
+{{pager_funct('/admin/pagelist',pager)|safe}}
+{%endblock admincontent%}
+
+{%block  endscript%}
+<script type="text/javascript">
+$(document).ready(function(){
+	$("[type=checkbox]").click(function(){
+		if ($(this).attr("checked")==undefined) { 
+			$(this).attr("checked","checked");
+		} else {
+			$(this).attr("checked",false);
+		}
+	});
+	$("#deletepost").click(function(){
+		var removelist=new Array;
+		$(".page").each(function(){
+			if($(this).attr("checked")=="checked"){
+				removelist.push($(this).attr("name"));
+			}
+		});
+		$.ajax({
+			type:"delete",
+			contentType:"application/json",
+			url:"/admin/post",
+			data:JSON_stringify(removelist),
+			success:function(){
+				document.location.reload(true);
+			},
+			error:function(){
+				alert('error');
+			}
+		})
+	});
+});
+</script>
+{%endblock  endscript%}

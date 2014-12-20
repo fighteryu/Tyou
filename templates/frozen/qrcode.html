@@ -1,0 +1,53 @@
+{%extends "part/base"%}
+{%block title%}Tonbo blog--二维码{%endblock title%}
+{%block postbody%}
+<style type="text/css">
+  #qrarea{
+    margin:20px auto 0 auto;
+    width:256px;
+  }
+  .linespace{
+    height:30px;
+  };
+
+</style>
+<div class="linespace"></div>
+<div class="searchform">
+  <input type="text" id="qrtext" placeholder="文本"/>
+  <input type="button" name="searchbutton" class="btn btn-primary" value="二维码生成" onclick="makeQR();return false;"/>
+</div>
+<div id="qrarea">
+  
+</div>
+{%endblock postbody%}
+
+{%block  endscript%}
+<script type="text/javascript" src="/static/js/lib/qrcode.min.js"></script>
+<script type="text/javascript">
+function makeQR(){
+  var text=$("#qrtext").val();
+  if (text==""){
+    text=location.protocol+"//"+location.host;
+  }
+  $("#qrarea").html("");
+  var qrcode = new QRCode("qrarea", {
+    text: text,
+    width: 256,
+    height: 256,
+    colorDark : "#000000",
+    colorLight : "#eeeeee",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+}
+$(document).ready(function(){
+  makeQR();
+  $("#qrtext").bind('keyup',function(e){
+      if(e.keyCode=='13'){
+      $("#qrtext").next().click();
+    }
+  });
+});
+
+</script>
+
+{%endblock  endscript%}
