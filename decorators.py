@@ -6,7 +6,6 @@ Decorators for URL handlers
 """
 from functools import wraps
 from flask import redirect, request, abort, g
-from application import settings
 
 
 def login_required(func):
