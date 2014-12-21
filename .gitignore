@@ -6,6 +6,8 @@ py
 uploads
 .ropeproject
 .DS_Store
+app.wsgi
+apache.enable
 
 *.py[cod]
 
