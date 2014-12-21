@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 import hashlib
 from flask import Blueprint, g, request, abort, jsonify,\
-    send_from_directory
+    send_from_directory, current_app
 from werkzeug import secure_filename
 
 from models import Media
@@ -38,7 +38,8 @@ def mediamgnt(filename=None):
         if f:
             filename = secure_filename(f.filename)
             local_filename = Media.new_local_filename(filename)
-            filepath = os.path.join(g.config['UPLOAD_FOLDER'], local_filename)
+            filepath = os.path.join(
+                current_app.config['UPLOAD_FOLDER'], local_filename)
             f.save(filepath)
             filesize = os.stat(filepath).st_size
 

@@ -192,6 +192,8 @@ class Post(db.Model):
         addlist = [item for item in newtags if item not in oldtags]
         minuslist = [item for item in oldtags if item not in newtags]
 
+        print new_string
+        print
         Tag.add(addlist)
         Tag.minus(minuslist)
 
@@ -235,7 +237,7 @@ class Tag(db.Model):
 
     @classmethod
     def add(cls, taglist):
-        """never use this method directly , use Post.save_tags instead
+        """never use this method directly , use Post.update_tags instead
         """
         for item in taglist:
             if item:
@@ -329,7 +331,7 @@ class Comment(db.Model):
 
 class Link(db.Model):
     link_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20))
+    name = db.Column(db.String(64))
     href = db.Column(db.String(1024))
     description = db.Column(db.String(64))
     create_time = db.Column(db.DateTime)

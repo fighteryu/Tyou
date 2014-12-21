@@ -2,7 +2,7 @@
 {%block title%}Admin Blog--参数设置{%endblock title%}
 
 {%block admincontent%}
-<form action="/admin/setting" method="post">
+<form action="/admin/setting" method="post" name="general-setting">
 	<h4>博客设置</h4>
 	<div class="input-group">
 		<span class="input-group-addon">博客名称</span>		
@@ -48,6 +48,11 @@
 	</div>
 
 	<button class="btn btn-primary" id="submit">Submit</button>
-
+</form>
+<br/>
+<form action="/admin/import" method="post" enctype="multipart/form-data">
+	<a type="button" class="btn btn-primary" href="/admin/export">备份</a>
+	<input type="submit" class="btn btn-primary" vaule="复原（初次搭建博客时使用）"/>
+	<input id="fileupload" name ="file" type="file">
 </form>
 {%endblock admincontent%}

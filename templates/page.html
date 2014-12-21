@@ -46,7 +46,7 @@
 	{%endfor%}	
 	</div>
 	<div class="operation">
-		{%if post.allow_comment%}操作: <a class="c-quote" href="#c-new">评论</a> {%endif%}{%if g.is_admin%} | <a href="/admin/post/{{post.post_id}}">编辑</a>{%endif%} 
+		{%if post.allow_comment%}操作: <a class="c-quote" href="#c-new">评论</a> {%endif%}{%if session.is_admin%} | <a href="/admin/post/{{post.post_id}}">编辑</a>{%endif%} 
 	</div>
 </div>
 {%if post.is_original%}

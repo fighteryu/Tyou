@@ -58,7 +58,7 @@ def page(url=None):
 @frontend.route('/comment', methods=["DELETE", "POST"])
 def comment():
     if request.method == "DELETE":
-        if not session.get("is_user", False):
+        if not session.get("is_admin", False):
             abort(401)
         removelist = request.json
         for item in removelist:

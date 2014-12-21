@@ -196,5 +196,133 @@ def commentmgnt(page=1):
                                admin_url="commentmgnt",
                                pager=pager)
 
-if __name__ == "__main__":
-    pass
+
+@adminor.route("/export", methods=["GET"])
+@admin_required
+def export():
+    postlist = Post.query.all()
+    commentlist = Comment.query.all()
+    linklist = Link.query.all()
+    medialist = Media.query.all()
+
+    ex_post = []
+    for post in postlist:
+        ex_post.append({
+            "post_id": post.post_id,
+            "url": post.url,
+            "title": post.title,
+            "content": post.content,
+            "keywords": post.keywords,
+            "metacontent": post.metacontent,
+            "create_time": int(post.create_time.strftime("%s")),
+            "update_time": int(post.update_time.strftime("%s")),
+            "tags": post.tags,
+            "allow_visit": post.allow_visit,
+            "allow_comment": post.allow_comment,
+            "need_key": post.need_key,
+            "is_original": post.is_original,
+            "num_lookup": post.num_lookup
+        })
+    ex_comment = []
+    for comment in commentlist:
+        ex_comment.append({
+            "comment_id": comment.comment_id,
+            "post_id": comment.post_id,
+            "url": comment.url,
+            "email": comment.email,
+            "nickname": comment.nickname,
+            "content": comment.content,
+            "to": comment.to,
+            "refid": comment.refid,
+            "create_time": int(comment.create_time.strftime("%s")),
+            "ip": comment.ip,
+            "website": comment.website
+        })
+
+    ex_link = []
+    for link in linklist:
+        ex_link.append({
+            "link_id": link.link_id,
+            "name": link.name,
+            "href": link.href,
+            "description": link.description,
+            "create_time": int(link.create_time.strftime("%s")),
+            "display": link.display,
+        })
+
+    ex_media = []
+    for media in medialist:
+        ex_media.append({
+            "fileid": media.fileid,
+            "filename": media.filename,
+            "version": media.version,
+            "content_type": media.content_type,
+            "size": media.size,
+            "create_time": int(media.create_time.strftime("%s")),
+            "display": media.display
+        })
+
+    return jsonify(
+        site=request.url_root,
+        links=ex_link,
+        comments=ex_comment,
+        posts=ex_post)
+
+
+@adminor.route("/import", methods=["POST"])
+def import_blog():
+    f = request.files["file"]
+    if f.content_type != "application/json":
+        return "please input *.json"
+
+    try:
+        data = json.load(f.stream)
+        comments = data.pop("comments", [])
+        links = data.pop("links", [])
+        medias= data.pop("medias", [])
+        posts = data.pop("posts", [])
+
+
+        for comment in comments:
+            new_comment= Comment()
+            for item in comment:
+               new_comment.__dict__[item] = comment[item]
+            new_comment.create_time = \
+                datetime.fromtimestamp(new_comment.create_time)
+            new_comment.save()
+
+        for link in links:
+            new_link = Link()
+            for item in link:
+                new_link.__dict__[item] = link[item]
+            new_link.create_time = \
+                datetime.fromtimestamp(new_link.create_time)
+            new_link.save()
+
+        for media in medias:
+            new_media = Media()
+            for item in media:
+                new_media.__dict__[item] = media[item]
+            new_media.create_time = \
+                datetime.fromtimestamp(new_media.create_time)
+            new_media.save()
+
+        for post in posts:
+            new_post= Post()
+            for item in post:
+                new_post.__dict__[item] = post[item]
+            new_post.create_time = \
+                datetime.fromtimestamp(new_post.create_time)
+            new_post.update_time = \
+                datetime.fromtimestamp(new_post.update_time)
+
+            new_post.raw_content = re.sub('<[^<]+?>', "", new_post.content)
+            newtags = new_post.tags
+            new_post.tags = ""
+            new_post.update_tags(newtags)
+            new_post.save()
+
+    except Exception as e :
+        return str(e)
+
+    return "Done"
