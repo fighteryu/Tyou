@@ -48,7 +48,7 @@ def mediamgnt(filename=None):
                     local_filename+now.strftime("%Y-%m-%d %H:%M:%S")
                     ).hexdigest(),
                 filename=filename,
-                version=Media.get_file_count(filename),
+                version=Media.get_version(filename),
                 content_type=f.content_type,
                 size=filesize,
                 create_time=now,

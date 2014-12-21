@@ -5,7 +5,7 @@
         <loc>{{post[0]|safe}}</loc>
         <lastmod>{{post[1]}}</lastmod>
         <changefreq>monthly</changefreq>
-		<priority>0.8</priority>
+		<priority>{{post[2]}}</priority>
     </url>
     {% endfor %}
 </urlset>

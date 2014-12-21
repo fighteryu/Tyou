@@ -21,13 +21,10 @@
 				</ul>
 			</li>
 			<!-- <li><a href="/tool">工具</a></li> -->
-			{%if g.is_admin%}
+			{%if session.is_admin%}
 			<li><a href="/admin">Admin</a></li>
-			{%endif%}
-			{%if g.user%}
-			<li><a href="/logout">{{g.user.nickname()}}(登出)</a></li>
 			{%else%}
-			<li><a href="/login">Gmail登录</a></li>
+			<li><a href="/login">&nbsp;&nbsp;</a></li>
 			{%endif%}
 			
 		</ul>

@@ -6,17 +6,20 @@
 
 """
 import re
+import json
 from datetime import datetime
-from flask import Blueprint, render_template, g, request, abort, jsonify
-
-from models import Post, Comment, Link, Media
+from flask import Blueprint, render_template, g, request, abort, jsonify,\
+    redirect, url_for
+from models import Post, Comment, Link, Media, User, gen_sidebar
 from helpers import gen_pager
+from decorators import admin_required
 
 adminor = Blueprint('admin', __name__, template_folder="../templates")
 
 
 @adminor.route("/postlist")
 @adminor.route('/postlist/<int:page>')
+@admin_required
 def adminpostlist(page=1):
     perpage = g.config["PER_PAGE"]
     postlist = Post.get_page(
@@ -33,6 +36,7 @@ def adminpostlist(page=1):
 
 
 @adminor.route("/post/<url>/inplace")
+@admin_required
 def pageinplace(url=None):
     """Check if a url is in place
     """
@@ -47,6 +51,7 @@ def pageinplace(url=None):
 
 @adminor.route("/post", methods=["GET", "POST", "DELETE"])
 @adminor.route("/post/<int:post_id>", methods=["GET", "POST", "DELETE"])
+@admin_required
 def editpost(post_id=None):
     '''show the edit page, update the post
     '''
@@ -104,10 +109,11 @@ def editpost(post_id=None):
 
 
 @adminor.route('/overview/<int:post_id>/')
+@admin_required
 def overview(post_id=-1):
     post = Post.get_by_id(post_id=post_id, public_only=False)
     if post:
-        sidebar = None
+        sidebar = gen_sidebar(g.config)
         return render_template('page.html',
                                admin_url="overview",
                                post=post,
@@ -118,6 +124,7 @@ def overview(post_id=-1):
 
 @adminor.route("/linkmgnt")
 @adminor.route("/linkmgnt/<int:page>")
+@admin_required
 def linkmgnt(page=1):
     per_page = g.config["ADMIN_ITEM_COUNT"]
     linklist = Link.get_page(offset=per_page*(page-1), limit=per_page)
@@ -130,6 +137,7 @@ def linkmgnt(page=1):
 @adminor.route("")
 @adminor.route("/")
 @adminor.route('/setting', methods=['GET', 'POST'])
+@admin_required
 def setting():
     if request.method == "GET":
         return render_template(
@@ -137,9 +145,24 @@ def setting():
             admin_url="setting",
             config=g.config)
 
+    elif request.method == "POST":
+        new_config = {}
+        for item in request.form:
+            if request.form[item].strip():
+                try:
+                    new_config[item] = int(request.form[item])
+                except Exception:
+                    new_config[item] = request.form[item]
+
+        user = User.get_one()
+        user.config = json.dumps(new_config)
+        user.save()
+        return redirect(url_for("admin.setting"))
+
 
 @adminor.route('/mediamgnt', methods=['GET'])
 @adminor.route('/mediamgnt/<int:page>', methods=["GET"])
+@admin_required
 def mediamgnt(page=1):
     per_page = g.config["ADMIN_ITEM_COUNT"]
     medialist = Media.get_page(per_page*(page-1), per_page)
@@ -155,6 +178,7 @@ def mediamgnt(page=1):
 
 @adminor.route('/commentmgnt', methods=["GET"])
 @adminor.route('/commentmgnt/<int:page>')
+@admin_required
 def commentmgnt(page=1):
     if request.method == "GET":
         per_page = g.config["ADMIN_ITEM_COUNT"]

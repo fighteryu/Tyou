@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding:utf-8
+# coding: utf-8
 """
     frontend.py
     ~~~~~~~~~~~~~
@@ -9,12 +9,12 @@
 import json
 import urllib
 from datetime import datetime
-from flask import Blueprint, request, jsonify, g, abort, render_template
-from models import gen_sidebar, Post, Comment
+from flask import request, jsonify, g, abort, render_template,\
+    flash, redirect, url_for, session
+from models import gen_sidebar, Post, Comment, User
 from helpers import gen_pager
 
-
-frontend = Blueprint("frontend", __name__, template_folder="../templates")
+from other import frontend
 
 
 @frontend.route('/')
@@ -58,6 +58,8 @@ def page(url=None):
 @frontend.route('/comment', methods=["DELETE", "POST"])
 def comment():
     if request.method == "DELETE":
+        if not session.get("is_user", False):
+            abort(401)
         removelist = request.json
         for item in removelist:
             comment = Comment.get_by_id(int(item))
@@ -96,4 +98,44 @@ def comment():
                           website=website
                           )
         comment.save()
+
+        # keep username, website, email to session
+        session.expire = False
+        session["nickname"] = nickname
+        session["website"] = website
+        session["email"] = email
+
         return jsonify(success=True, message="success")
+
+
+@frontend.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        if "username" in session:
+            return redirect(url_for("admin.setting"))
+        sidebar = gen_sidebar(g.config)
+        return render_template("login.html", sidebar=sidebar)
+
+    elif request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        if not username.strip() or not password:
+            flash("用户名密码错误")
+            return redirect(url_for('.login'))
+
+        user = User.get_by_name(username.split()[0])
+        if not user or not user.validate(password):
+            flash("用户名密码错误")
+
+        session.expire = False
+        session["is_admin"] = True
+        session["username"] = username
+        return redirect(url_for("admin.setting"))
+
+
+@frontend.route("/logout", methods=["GET"])
+def logout():
+    session.pop("username", None)
+    session.pop("is_admin", None)
+
+    return redirect(url_for(".index"))

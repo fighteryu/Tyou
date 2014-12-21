@@ -16,6 +16,7 @@ Use the '-f' flag to force the new keys to be written to the file
 
 """
 import sys
+import time
 import string
 import os.path
 import hashlib
@@ -25,6 +26,8 @@ from optparse import OptionParser
 from random import choice
 from string import Template
 
+import warnings
+warnings.filterwarnings('ignore')
 # File settings
 file_name = 'secret_keys.py'
 file_path = os.path.join(
@@ -104,21 +107,35 @@ def get_user(username):
 
 
 def create_user(username, password):
+    # Create the table first if not exists
+    conn = db.cursor()
+    conn.execute("""
+        create table if not exists user
+                 (username varchar(20),
+                 password varchar(256),
+                 salt varchar(20),
+                 config text,
+                 primary key (username));
+                 """)
     users = get_user(username)
     if len(users) > 0:
         print("user already exists")
         return
     sha512 = hashlib.sha512()
+    salt = str(int(time.time()))
+    sha512.update(salt)
     sha512.update(password)
     hashed_password = base64.urlsafe_b64encode(sha512.digest())
 
     conn = db.cursor()
     conn.execute(
-        "insert into user (username, password) values\
-        ('{username}','{password}');".format(
+        """insert into user (username, password, salt) values
+        ('{username}','{password}','{salt}');""".format(
             username=username,
-            password=hashed_password)
+            password=hashed_password,
+            salt=salt)
     )
+    db.commit()
     print("create user Done")
 
 
@@ -127,6 +144,7 @@ def delete_user(username):
     conn.execute(
         "delete from user where username='{username}';"\
         .format(username=username))
+    db.commit()
     print("delete user Done")
 
 if __name__ == "__main__":

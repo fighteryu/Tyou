@@ -7,6 +7,7 @@
 """
 import os
 import json
+import hashlib
 from flask.ext.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -29,10 +30,28 @@ class User(db.Model):
     @classmethod
     def get_config(cls):
         user = cls.query.first()
-        if user is not None:
+        if user and user.config:
             return json.loads(user.config)
-        else:
-            return None
+        return None
+
+    @classmethod
+    def get_by_name(cls, username):
+        return cls.query.filter_by(username=username).first()
+
+    @classmethod
+    def get_one(cls):
+        return cls.query.first()
+
+    def validate(self, password):
+        sha512 = hashlib.sha512()
+        sha512.update(self.salt)
+        sha512.update(password)
+
+        return sha512.hexdigest() == self.password
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
 
 
 class Post(db.Model):
@@ -136,6 +155,11 @@ class Post(db.Model):
         for word in words:
             query = query.filter(cls.raw_content.like("%"+word+"%"))
         return query.count()
+
+    @classmethod
+    def get_last_x(cls, limit):
+        return cls.query.filter_by(allow_visit=True).\
+            order_by(cls.post_id.desc()).all()
 
     def get_tags(self):
         taglist = self.tags.split(",")
@@ -357,8 +381,14 @@ class Media(db.Model):
         return cls.query.filter_by(fileid=fileid).first()
 
     @classmethod
-    def get_file_count(cls, filename):
-        return cls.query.filter_by(filename=filename).count()
+    def get_version(cls, filename):
+        media = cls.query.filter_by(filename=filename).\
+            order_by(cls.create_time.desc()).first()
+
+        if media:
+            return media.version + 1
+        else:
+            return 0
 
     @classmethod
     def new_local_filename(cls, filename):
@@ -404,6 +434,10 @@ def gen_sidebar(config):
     rr["taglist"] = taglist
     commentlist = Comment.get_last_X(config["COMMENT_COUNT"])
     rr["commentlist"] = commentlist
-    linklist = Link.get_X(config["COMMENT_COUNT"])
+    linklist = Link.get_X(config["LINK_COUNT"])
     rr["linklist"] = linklist
+
+    announce = Post.get_by_id(config["ANNOUNCE_ID"])
+    rr["announce"] = announce
+    rr["announce_length"] = config["ANNOUNCE_LENGTH"]
     return rr
