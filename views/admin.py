@@ -168,7 +168,8 @@ def mediamgnt(page=1):
     medialist = Media.get_page(per_page*(page-1), per_page)
     pager = gen_pager(
         Media.count(),
-        per_page)
+        per_page,
+        page)
     return render_template('admin/mediamgnt.html',
                            admin_url="mediamgnt",
                            medialist=medialist,
@@ -272,21 +273,18 @@ def export():
 @adminor.route("/import", methods=["POST"])
 def import_blog():
     f = request.files["file"]
-    #if f.content_type != "application/json":
-    #    return "please input *.json"
 
     try:
         data = json.load(f.stream)
         comments = data.pop("comments", [])
         links = data.pop("links", [])
-        medias= data.pop("medias", [])
+        medias = data.pop("medias", [])
         posts = data.pop("posts", [])
 
-
         for comment in comments:
-            new_comment= Comment()
+            new_comment = Comment()
             for item in comment:
-               new_comment.__dict__[item] = comment[item]
+                new_comment.__dict__[item] = comment[item]
             new_comment.create_time = \
                 datetime.fromtimestamp(new_comment.create_time)
             new_comment.save()
@@ -308,7 +306,7 @@ def import_blog():
             new_media.save()
 
         for post in posts:
-            new_post= Post()
+            new_post = Post()
             for item in post:
                 new_post.__dict__[item] = post[item]
             new_post.create_time = \
@@ -322,7 +320,7 @@ def import_blog():
             new_post.update_tags(newtags)
             new_post.save()
 
-    except Exception as e :
+    except Exception as e:
         return str(e)
 
     return "Done"

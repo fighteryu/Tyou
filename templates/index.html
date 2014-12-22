@@ -8,5 +8,5 @@
 </div>
 {%endfor%}
 {%from 'part/pager' import pager_funct%}
-{{pager_funct('',pager)|safe}}
+{{pager_funct('',pager,prefix="page-")|safe}}
 {%endblock postbody%}
