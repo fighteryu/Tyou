@@ -5,7 +5,7 @@
     ~~~~~~~~~~
 
 """
-DEBUG = True
+DEBUG = False
 ########
 # config for database
 username = "tyou"
