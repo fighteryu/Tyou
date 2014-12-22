@@ -393,22 +393,20 @@ class Media(db.Model):
             return 0
 
     @classmethod
-    def new_local_filename(cls, filename):
+    def new_local_filename(cls, filename, version):
         """for given filename ,return a filename that can be saved to disk
             input: abc.jpg
             output:
 
         """
-        version = cls.query.filter_by(filename=filename).count()
-        return "f" + str(version) + filename
+        return ("f" + str(version) + filename).encode("utf8")
 
     def filepath(self, upload_folder):
-        local_filename = "f" + str(self.version) + self.filename
-        return os.path.join(upload_folder, local_filename)
+        return os.path.join(upload_folder, self.local_filename)
 
     @property
     def local_filename(self):
-        return "f"+str(self.version)+self.filename
+        return ("f"+str(self.version)+self.filename).encode("utf8")
 
     def save(self):
         db.session.add(self)

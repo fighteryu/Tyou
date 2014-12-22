@@ -272,8 +272,8 @@ def export():
 @adminor.route("/import", methods=["POST"])
 def import_blog():
     f = request.files["file"]
-    if f.content_type != "application/json":
-        return "please input *.json"
+    #if f.content_type != "application/json":
+    #    return "please input *.json"
 
     try:
         data = json.load(f.stream)

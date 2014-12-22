@@ -9,9 +9,8 @@ import os
 import json
 from datetime import datetime
 import hashlib
-from flask import Blueprint, g, request, abort, jsonify,\
+from flask import Blueprint, request, abort, jsonify,\
     send_from_directory, current_app
-from werkzeug import secure_filename
 
 from models import Media
 
@@ -29,15 +28,16 @@ def mediamgnt(filename=None):
             if not media or media.filename != filename:
                 abort(404)
             return send_from_directory(
-                g.config["UPLOAD_FOLDER"],
+                current_app.config["UPLOAD_FOLDER"],
                 media.local_filename
             )
 
     elif request.method == "POST":
         f = request.files["files[]"]
         if f:
-            filename = secure_filename(f.filename)
-            local_filename = Media.new_local_filename(filename)
+            filename = f.filename
+            version = Media.get_version(filename)
+            local_filename = Media.new_local_filename(filename, version)
             filepath = os.path.join(
                 current_app.config['UPLOAD_FOLDER'], local_filename)
             f.save(filepath)

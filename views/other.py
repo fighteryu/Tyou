@@ -13,10 +13,6 @@ from werkzeug.contrib.atom import AtomFeed
 from flask import Blueprint, request, render_template, make_response, g
 from models import Post
 
-import sys
-reload(sys)
-sys.setdefaultencoding("UTF-8")
-
 frontend = Blueprint('/', __name__, template_folder="../templates")
 
 
