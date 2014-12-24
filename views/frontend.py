@@ -127,7 +127,6 @@ def login():
         if not user or not user.validate(password):
             flash("用户名密码错误")
 
-        session.expire = False
         session["is_admin"] = True
         session["username"] = username
         return redirect(url_for("admin.setting"))

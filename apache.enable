@@ -1,8 +1,11 @@
 <VirtualHost *>
         ServerName ifconfiger.com
         WSGIScriptAlias / /home/fzlee/Tyou/app.wsgi
-        <Directory /home/fzlee/Tyou>
+        <Directory /var/www/Tyou>
                 Order deny,allow
                 Allow from all
         </Directory>
+        alias /static /var/www/Tyou/static
+        alias /favicon.ico /var/www/Tyou/static/favicon.ico
+        alias /robots.txt /var/www/Tyou/static/robots.txt
 </VirtualHost>
