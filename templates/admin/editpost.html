@@ -73,6 +73,9 @@ $(document).ready(function(){
 	$("#checkpost").click(turnToPage);
 	initClick();
 	setInterval(auto_save,1000*30);
+	$(window).bind('beforeunload', function(){
+  		return 'Are you sure you want to leave?';
+	});
 });
 
 function submitEvent(){
