@@ -72,6 +72,7 @@ $(document).ready(function(){
 	$('#submit').click(submitEvent);
 	$("#checkpost").click(turnToPage);
 	initClick();
+	setInterval(auto_save,1000*30);
 });
 
 function submitEvent(){
@@ -161,9 +162,15 @@ function initClick(){
 			}
 		});
 	});
-
-
 }
+
+function auto_save(){
+	/*save post to database every specified minutes*/
+	if($("#title").val() && $("#url").val()){
+		$("#submit").click();		
+	}
+}
+
 
  </script>
 {%endblock  endscript%}

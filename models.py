@@ -83,7 +83,7 @@ class Post(db.Model):
         self.keywords = ""
         self.metacontent = ""
         self.tags = ""
-        self.allow_visit = True
+        self.allow_visit = False
         self.allow_comment = True
         self.need_key = False
         self.is_original = True
