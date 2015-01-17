@@ -145,7 +145,8 @@ class Post(db.Model):
         query = cls.query.filter_by(allow_visit=True)
         for word in words:
             query = query.filter(cls.raw_content.like("%"+word+"%"))
-        return query.offset(offset).limit(limit).all()
+        return query.order_by(
+            cls.post_id.desc()).offset(offset).limit(limit).all()
 
     @classmethod
     def text_search_count(cls, words):

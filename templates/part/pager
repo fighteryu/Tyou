@@ -18,9 +18,7 @@
 	  		<li><a href="{{url}}/{{prefix}}{{i+1}}" >{{i+1}}</a></li>
 	  	{%endif%}
 	  {%endfor%}
-  {%endif%} 
-
-  
+  {%endif%}
   <li><span >&raquo;</span></li>
 </ul>
 {%endif%}

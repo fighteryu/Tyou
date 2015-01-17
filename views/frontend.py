@@ -18,7 +18,7 @@ from other import frontend
 
 
 @frontend.route('/')
-@frontend.route("/page-<int:page>")
+@frontend.route("/index/<int:page>")
 def index(page=1):
     offset = g.config["PER_PAGE"]*(page-1)
     postlist = Post.get_page(offset, g.config["PER_PAGE"])
