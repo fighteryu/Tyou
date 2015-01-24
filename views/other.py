@@ -12,6 +12,7 @@ from urlparse import urljoin
 from werkzeug.contrib.atom import AtomFeed
 from flask import Blueprint, request, render_template, make_response, g
 from models import Post
+import config
 
 frontend = Blueprint('/', __name__, template_folder="../templates")
 
@@ -22,7 +23,7 @@ def make_external(url):
 
 @frontend.route('/rss')
 def recent_feed():
-    feed = AtomFeed('文章订阅',
+    feed = AtomFeed(g.config["BLOGNAME"],
                     feed_url=request.url, url=request.url_root)
     postlist = Post.get_page(0, g.config["RSS_ITEM_COUNT"])
     for post in postlist:
