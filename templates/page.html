@@ -2,8 +2,8 @@
 {%block title%}{{post.title}}{%endblock title%}
 
 {%block meta%}
-	{%if post.keywords%}<meta name="keywords" content='{{post.keywords}}'>{%endif%}
-	{%if post.metacontent%}<meta name="content" content="{{post.metacontent}}">{%endif%}
+	{%if post.keywords%}<meta name="keywords" content='{{post.keywords}}'/>{%endif%}
+	{%if post.metacontent%}<meta name="description" content="{{post.metacontent}}"/>{%endif%}
 {%endblock meta%}
 {%block extrahead%}
 	<link href="/static/js/lib/syntaxhighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
