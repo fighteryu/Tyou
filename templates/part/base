@@ -23,7 +23,6 @@
 			<div class="col-md-9">
 				<div class="mainbody">
 				{%block postbody%}
-					
 				{%endblock postbody%}
 				</div>
 			</div>
