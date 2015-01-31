@@ -5,7 +5,7 @@
   {%if param %}
   	{%for i in range (pager.pagenumber)%}
 	  	{%if pager.currentpage==i+1%}
-	 		<li><span class="active" href="#">{{pager.currentpage}}</span></li>
+	 		<li><span class="active">{{pager.currentpage}}</span></li>
 	  	{%else%}
 	  		<li><a href="{{url}}/{{prefix}}{{i+1}}?{{param}}" >{{i+1}}</a></li>
 	  	{%endif%}
