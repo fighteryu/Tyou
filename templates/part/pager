@@ -1,7 +1,7 @@
 {% macro pager_funct(url,pager,param="",prefix="") -%}
 {%if pager.pagenumber >=1%}
 <ul class="pagination" style="margin:0 auto">
-  <li><span href="#">&laquo;</span></li>
+  <li><span>&laquo;</span></li>
   {%if param %}
   	{%for i in range (pager.pagenumber)%}
 	  	{%if pager.currentpage==i+1%}
