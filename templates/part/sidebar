@@ -8,9 +8,6 @@
           <a href="/page/{{sidebar.announce.url}}">查看&gt;&gt;&gt;</a>
         </div>
         </div>
-       
-        
-        
     </div>
 {%endif%}
 {%if sidebar.taglist%}
