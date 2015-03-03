@@ -48,7 +48,6 @@ def page(url=None):
                                blogname=g.config["BLOGNAME"],
                                sidebar=sidebar,
                                post=post,
-                               use=None,
                                commentlist=commentlist,
                                is_admin=True)
     else:

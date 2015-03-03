@@ -28,7 +28,7 @@
 	{%endif%}
 	</header>
 	<div class="divider"></div>
-	{%if not post.need_key%}
+	{%if not post.need_key or admin_url == "overview" %}
 		<article id="content" class="content">{{post.content | safe}}</article>
 	{%else%}
 		<div class="searchform" style="">
