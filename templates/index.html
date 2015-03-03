@@ -1,0 +1,12 @@
+{%extends "part/base"%}
+{%from "part/post_item_simple" import list_post_simple%}
+{%block title%}{{blogname}}{%if pager%}--第{{pager.currentpage}}页{%endif%}{%endblock title%}
+{%block postbody%}
+{%for eachpost in postlist%}
+<div class="row outline widget">
+{{list_post_simple(eachpost) | safe}}
+</div>
+{%endfor%}
+{%from 'part/pager' import pager_funct%}
+{{pager_funct('',pager,prefix="index/")|safe}}
+{%endblock postbody%}

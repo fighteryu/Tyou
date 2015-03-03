@@ -1,0 +1,238 @@
+{%extends "part/adminbase"%}
+{%block title%}Admin Blog--文件{%endblock title%}
+{%block extraadminhead%}
+<link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload-ui.css"/>
+<link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload.css"/>
+{%endblock extraadminhead%}
+{%block admincontent%}
+<span class="btn btn-success fileinput-button">
+        <i class="glyphicon glyphicon-plus"></i>
+        <span>Add files...</span>
+        <input id="fileupload" type="file" name="files[]" multiple>
+</span>
+<br><br>
+<div id="progress" class="progress">
+        <div class="progress-bar progress-bar-success"></div>
+    </div>
+    <!-- The container for the uploaded files -->
+    <div id="files" class="files"></div>
+<table class="widetable table table-condensed table-striped table-bordered table-hover">
+	<thead>
+		<tr>
+			<th class="check-column" scope="col" style="">
+			<button class="btn btn-primary btn-xs" id="deletemedia">删除</button>
+			<button class="btn btn-primary btn-xs" id="reverse">隐藏/显示</button>
+			</th>
+			<th>日期</th>
+			<th>文件名</th>
+			<th>大小</th>
+			<th>version</th>
+			<th>允许显示</th>
+		</tr>
+	</thead>
+	<tbody>
+		{%for media in medialist%}
+		<tr>
+			<th>
+				<input class="page" type="checkbox" value="on" filename="{{media.filename}}" fileid="{{media.fileid}}">
+			</th>
+			<td>
+				<div class="time">{{media.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
+			</td>
+			<td>
+				<a href="/media/{{media.filename}}?fileid={{media.fileid}}">{{media.filename}}</a>
+			</td>
+			<td>
+				<div class="filesize">
+					{{media.size}}				
+				</div>
+			</td>
+			<td>{{media.version}}</td>
+			{%if media.display%}
+			<td>允许</td>
+			{%else%}
+			<td>不允许</td>
+			{%endif%}
+		</tr>
+		{%endfor%}				
+	</tbody>
+</table>
+
+{%from 'part/pager' import pager_funct%}
+{{pager_funct('/admin/mediamgnt',pager)|safe}}
+{%endblock admincontent%}
+
+{%block  endscript%}
+<script src="/static/js/lib/jQuery-File-Upload/vendor/jquery.ui.widget.js"></script>
+<script type="text/javascript" src="/static/js/lib/jQuery-File-Upload/vendor/load-image.all.min.js"></script>
+<script type="text/javascript" src="/static/js/lib/jQuery-File-Upload/vendor/canvas-to-blob.min.js"></script>
+<script src="/static/js/lib/jQuery-File-Upload/jquery.iframe-transport.js"></script>
+<script src="/static/js/lib/jQuery-File-Upload/jquery.fileupload.js"></script>
+<script src="/static/js/lib/jQuery-File-Upload/jquery.fileupload-process.js"></script>
+<script src="/static/js/lib/jQuery-File-Upload/jquery.fileupload-image.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	$(".dropmenu").click(function(){
+		var choosecontent=$(this).text();
+		var obj=$(this).parent().parent().parent().children(".menu").text(choosecontent);
+	});
+	$("[type=checkbox]").click(function(){
+		if ($(this).attr("checked")==undefined) { 
+			$(this).attr("checked","checked");
+		} else {
+			$(this).attr("checked",false);
+		}
+	});
+
+	$(".filesize").each(function(){
+		$(this).text(size_format($(this).text()));		
+	});
+	$("#deletemedia").click(function(){
+		var removelist=new Array;
+		$(".page").each(function(){
+			if($(this).attr("checked")=="checked"){
+				removelist.push({filename:$(this).attr("filename"),fileid:$(this).attr("fileid")});
+			}
+		});
+		$.ajax({
+			type:"delete",
+			contentType:"application/json",
+			url:"/media",
+			data:JSON_stringify(removelist),
+			success:function(){
+				document.location.reload(true);
+			},
+			error:function(){
+				alert('error')
+			}
+		})
+	});
+
+	$("#reverse").click(function(){
+		var reverselist=new Array;
+		$(".page").each(function(){
+			if($(this).attr("checked")=="checked"){
+				reverselist.push({filename:$(this).attr("filename"),fileid:$(this).attr("fileid")});
+			}
+		});
+		$.ajax({
+			type:"post",
+			contentType:"application/json",
+			url:"/media/reverse",
+			data:JSON_stringify(reverselist),
+			success:function(){
+				document.location.reload(true);
+			},
+			error:function(){
+				alert('error')
+			}
+		});
+	});
+
+});
+</script>
+<script type="text/javascript">
+	/*jslint unparam: true, regexp: true */
+/*global window, $ */
+$(function () {
+    'use strict';
+    // Change this to the location of your server-side upload handler:
+    var url = '/media',
+        uploadButton = $('<button/>')
+            .addClass('btn btn-primary')
+            .prop('disabled', true)
+            .text('Processing...')
+            .on('click', function () {
+                var $this = $(this),
+                    data = $this.data();
+                $this
+                    .off('click')
+                    .text('Abort')
+                    .on('click', function () {
+                        $this.remove();
+                        data.abort();
+                    });
+                data.submit().always(function () {
+                    $this.remove();
+                });
+            });
+    $('#fileupload').fileupload({
+        url: url,
+        dataType: 'json',
+        autoUpload: false,
+        acceptFileTypes: /.*/i,
+        maxFileSize: 5000000, // 5 MB
+        // Enable image resizing, except for Android and Opera,
+        // which actually support image resizing, but fail to
+        // send Blob objects via XHR requests:
+        disableImageResize: /Android(?!.*Chrome)|Opera/
+            .test(window.navigator.userAgent),
+        previewMaxWidth: 100,
+        previewMaxHeight: 100,
+        previewCrop: true
+    }).on('fileuploadadd', function (e, data) {
+        data.context = $('<div/>').appendTo('#files');
+        $.each(data.files, function (index, file) {
+            var node = $('<p/>')
+                    .append($('<span/>').text(file.name));
+            if (!index) {
+                node
+                    .append('<br>')
+                    .append(uploadButton.clone(true).data(data));
+            }
+            node.appendTo(data.context);
+        });
+    }).on('fileuploadprocessalways', function (e, data) {
+        var index = data.index,
+            file = data.files[index],
+            node = $(data.context.children()[index]);
+        if (file.preview) {
+            node
+                .prepend('<br>')
+                .prepend(file.preview);
+        }
+        if (file.error) {
+            node
+                .append('<br>')
+                .append($('<span class="text-danger"/>').text(file.error));
+        }
+        if (index + 1 === data.files.length) {
+            data.context.find('button')
+                .text('Upload')
+                .prop('disabled', !!data.files.error);
+        }
+    }).on('fileuploadprogressall', function (e, data) {
+        var progress = parseInt(data.loaded / data.total * 100, 10);
+        $('#progress .progress-bar').css(
+            'width',
+            progress + '%'
+        );
+    }).on('fileuploaddone', function (e, data) {
+        $.each(data.result.files, function (index, file) {
+            if (file.url) {
+                var link = $('<a>')
+                    .attr('target', '_blank')
+                    .prop('href', file.url);
+                $(data.context.children()[index])
+                    .wrap(link);
+            } else if (file.error) {
+                var error = $('<span class="text-danger"/>').text(file.error);
+                $(data.context.children()[index])
+                    .append('<br>')
+                    .append(error);
+            }
+			
+
+        });
+    }).on('fileuploadfail', function (e, data) {
+        $.each(data.files, function (index) {
+            var error = $('<span class="text-danger"/>').text('File upload failed.');
+            $(data.context.children()[index])
+                .append('<br>')
+                .append(error);
+        });
+    }).prop('disabled', !$.support.fileInput)
+        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+});
+</script>
+{%endblock  endscript%}

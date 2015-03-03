@@ -1,0 +1,334 @@
+{%extends "part/base"%}
+{%block title%}{{post.title}}{%endblock title%}
+
+{%block meta%}
+	{%if post.keywords%}<meta name="keywords" content='{{post.keywords}}'/>{%endif%}
+	{%if post.metacontent%}<meta name="description" content="{{post.metacontent}}"/>{%endif%}
+{%endblock meta%}
+{%block extrahead%}
+	<link href="/static/js/lib/syntaxhighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+	<link href="/static/js/lib/syntaxhighlighter/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+{%endblock extrahead%}
+{%block postbody%}
+<form>
+	<input type="hidden" id="post_id" name="post_id" value="{{post.post_id}}">
+</form>
+<div class="bigwidget">
+	<header>
+	<h2 id="posttitle" {%if post.need_key%}_encrypted="true"{%endif%}>
+		<a href="/page/{{post.url}}">
+		{%if post.need_key%}<span class="glyphicon glyphicon-lock"></span>{%endif%}{{post.title}}
+		</a>
+	</h2>
+	<div>博主 创建于 {{post.create_time.strftime("%Y-%m-%d")}}<!--  | 
+	<strong>Modified:</strong> {{post.update_time.strftime("%Y-%m-%d")}} -->
+	</div>
+	{%if comment%}
+	<div>{{comment.count}} comments</div>
+	{%endif%}
+	</header>
+	<div class="divider"></div>
+	{%if not post.need_key%}
+		<article id="content" class="content">{{post.content | safe}}</article>
+	{%else%}
+		<div class="searchform" style="">
+			<input type="password" id="post_key" placeholder="输入解密Key以继续,8-16数字、字母以及下划线组合">
+			<input type="button" id="decrypt" name="decrypt button" class="btn btn-primary" value="GO" onclick="show_encrypted_data();return false;"/>
+		</div>
+		<article id="content" class="content"></article>
+	{%endif%}
+	<div class="divider"></div>
+	<div class="tagcloud">
+	{%for tag in post.get_tags()%}
+		<div class="tag">
+		<a href="/search/?tagname={{tag|urlencode}}">{{tag}}</a>
+		</div>			
+	{%endfor%}	
+	</div>
+	<div class="operation">
+		{%if post.allow_comment%}操作: <a class="c-quote" href="#c-new">评论</a> {%endif%}{%if session.is_admin%} | <a href="/admin/post/{{post.post_id}}">编辑</a>{%endif%} 
+	</div>
+</div>
+{%if post.is_original%}
+<div class="bigwidget">
+	<p>除非注明，<a href="{{g.config.BLOGURL}}">{{g.config.BLOGNAME}}博客</a>文章均为原创，转载请以链接形式标明本文地址。</p>
+	<p>本文地址：<a href="{{g.config.BLOGURL}}/page/{{post.url}}">{{g.config.BLOGURL}}/page/{{post.url}}</a></p>
+</div>
+{%endif%}
+
+{%if post.allow_comment%}
+{%if commentlist%}
+<div class="bigwidget usercommentfield">
+	{%for eachcomment in commentlist%}
+	<div class="c-list">
+		<div class="c-meta">
+			<i class="c-nickname">{{eachcomment.nickname}}</i> {%if eachcomment.to%}回复 <i>{{eachcomment.to}}</i> {%endif%}<span class="c-time">{{eachcomment.create_time.strftime("%Y-%m-%d %H:%M")}}</span>
+			<a href="#" class="c-quote"> 回复</a>
+		</div>
+		<div class="c-content" _id="{{eachcomment.comment_id}}">{{eachcomment.content | safe}}</div>
+	</div>
+	<div class="divider"></div>
+	{%endfor%}
+</div>
+{%endif%}
+{%endif%}
+<div class="bigwidget c-new" id="c-new" style="display:none"></div>
+<div id="comment-widget" style="display:none">
+<form class="form-horizontal c-form" role="form">
+  <div class="form-group">
+    <label for="nickname" class="col-sm-2 control-label">昵称</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control input-sm form-inline" id="nickname" placeholder="中文、字母、数字、下划线" value="{{session.nickname}}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="email" class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-4">
+      <input type="email" class="form-control input-sm form-inline" id="email" placeholder="Email不会被公开" value="{{session.email}}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="website" class="col-sm-2 control-label">网站</label>
+    <div class="col-sm-4">
+      <input type="text" class="form-control input-sm form-inline" id="website" placeholder="可选,不必输入http://" value="{{session.website}}">
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-8">
+      <div class="textarea">
+        <textarea class="form-control" rows="5" id="newcomment" placeholder="不支持特殊标签" ></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-8">
+      <button type="submit" class="btn btn-sm btn-primary" onclick="submitcomment(this);return false;">评论</button>
+    </div>
+  </div>
+</form>
+</div>
+
+{%endblock postbody%}
+{%block  endscript%}
+<script src="/static/js/lib/syntaxhighlighter/scripts/shCore.js"></script>
+<script src="/static/js/lib/syntaxhighlighter/scripts/shAutoloader.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	if($("#posttitle").attr("_encrypted")=="true"){
+		loadfile("/static/js/lib/CryptoJS3.1.2/rollups/aes.js","js");
+		loadfile("/static/js/lib/CryptoJS3.1.2/components/mode-cfb.js","js");
+		loadfile("/static/js/lib/CryptoJS3.1.2/rollups/md5.js","js");
+		loadfile("/static/js/lib/CryptoJS3.1.2/components/enc-base64-min.js","js");
+		loadfile("/static/js/lib/CryptoJS3.1.2/components/enc-utf16-min.js","js");
+		$("#post_key").bind('keyup',function(e){
+    		if(e.keyCode=='13'){
+				$("#decrypt").click();
+			}
+		});
+	}
+	else{
+		highlight();
+	}
+	makecommenthtml=$("#comment-widget").html();
+	$(".c-quote").click(function(){
+		$(".c-form").remove();
+		if($(this).attr("href")=="#c-new"){
+			//new comment
+			$("#c-new").html("")
+			$("#c-new").html(makecommenthtml);
+			$("#c-new").show();
+		}
+		else{
+			//reply to someone
+			$("#c-new").hide();
+			$(this).parent().parent().append(makecommenthtml);
+			var name=$(this).parent().children(".c-nickname").text();
+			$("#newcomment").attr("placeholder","回复 "+name+"\n不支持特殊标签")
+			return false;
+		}
+	});
+});
+
+function path()
+{
+    var args = arguments,
+    result = [];
+    for(var i = 0; i < args.length; i++)
+        result.push(args[i].replace('@', '/static/js/lib/syntaxhighlighter/scripts/'));
+    return result
+};
+
+function highlight(){
+	SyntaxHighlighter.autoloader.apply(null, path(
+    'applescript            @shBrushAppleScript.js',
+    'actionscript3 as3      @shBrushAS3.js',
+    'bash shell             @shBrushBash.js',
+    'coldfusion cf          @shBrushColdFusion.js',
+    'cpp c                  @shBrushCpp.js',
+    'c# c-sharp csharp      @shBrushCSharp.js',
+    'css                    @shBrushCss.js',
+    'delphi pascal          @shBrushDelphi.js',
+    'diff patch pas         @shBrushDiff.js',
+    'erl erlang             @shBrushErlang.js',
+    'groovy                 @shBrushGroovy.js',
+    'java                   @shBrushJava.js',
+    'jfx javafx             @shBrushJavaFX.js',
+    'js jscript javascript  @shBrushJScript.js',
+    'perl pl                @shBrushPerl.js',
+    'php                    @shBrushPhp.js',
+    'text plain             @shBrushPlain.js',
+    'py python              @shBrushPython.js',
+    'ruby rails ror rb      @shBrushRuby.js',
+    'sass scss              @shBrushSass.js',
+    'scala                  @shBrushScala.js',
+    'sql                    @shBrushSql.js',
+    'vb vbnet               @shBrushVb.js',
+    'xml xhtml xslt html    @shBrushXml.js'
+    ));
+	// SyntaxHighlighter.vars.discoveredBrushes=null;
+	SyntaxHighlighter.defaults['toolbar'] = false;
+	SyntaxHighlighter.defaults['quick-code'] = false;
+	SyntaxHighlighter.all();
+}
+
+function submitcomment(obj){
+	var haserror=false;
+	$("#nickname").parent().parent().removeClass("has-error");		
+	$("#email").parent().parent().removeClass("has-error");		
+	$("#newcomment").parent().parent().removeClass("has-error");
+	$(".error-message").remove();
+
+	$("#nickname").val($("#nickname").val().trim());
+	$("#email").val($("#email").val().trim());
+	if( !isValidNickname($("#nickname").val()) ){
+		$("#nickname").parent().parent().addClass("has-error");
+		haserror=true;
+	}
+	if(!isValidMail($("#email").val())){
+		$("#email").parent().parent().addClass("has-error");
+		haserror=true;
+	}
+	if($("#newcomment").val().trim()==""){
+		$("#newcomment").parent().parent().addClass("has-error");
+		haserror=true;
+	}
+	data=gen_comment_obj(obj);
+	if(haserror==false){
+		$.ajax({
+			url:"/comment",
+			type:"POST",
+			data:data,
+			contentType:"application/json",
+			success:function(data){
+				data=JSON.stringify(data);
+				if (data.success==true){
+					alert(data.message);
+				}
+				else{
+					var message="<span id='tmp'>评论成功</span>";
+					$("#message").html("");
+					$("#message").html(message);
+					$("#tmp").fadeOut(3000,document.location.reload());
+				}
+			},
+			error:function(){
+				alert("server error");
+			}
+		});
+	}
+}
+
+function gen_comment_obj(obj){
+	var newcomment={};
+	newcomment.nickname=$("#nickname").val();
+	newcomment.email=$("#email").val();
+	newcomment.content=$("#newcomment").val();
+	newcomment.website=$("#website").val();
+	newcomment.refid=null;
+	obj=$(obj).parent().parent().parent().parent();
+	if(!obj.hasClass("bigwidget")){
+		newcomment.refid=obj.children(".c-content").attr("_id");
+	}
+	newcomment.post_id=$("#post_id").val();
+	newcomment=JSON.stringify(newcomment);
+	return newcomment;
+}
+function show_encrypted_data(){
+	//client firstly request a job ID first. 
+	$("#content").html("");
+	var _JOB_ID=null;
+	$.ajax({
+		type:"get",
+		url:"/key/",
+		async:false,
+		success:function (data){
+			data=JSON.parse(data);
+			_JOB_ID=data.jobid;
+		}
+	});
+	//client secondly request for encrypted data
+	data={
+		"jobid":_JOB_ID,
+		// "posturl":"1234567890123456"
+		"posturl":$("#posttitle").children("a").attr("href").split("/")[2]
+	};
+	data=encode_obj(data);
+	$.ajax({
+		type:"post",
+		url:"/key/",
+		data:JSON.stringify(data,false),
+		contentType:"application/json",
+		success:function (data){
+			data=JSON.parse(data);
+			if(data.validate==false){
+				$("#content").html('<p class="text-danger" style="text-align:center;">错误密钥<p>');
+			}
+			else if (data.error==true){
+				$("#content").html('<p class="text-danger" style="text-align:center;">文章未发现<p>');
+			}
+			else{
+				var base64_content=decrypt_obj(data.post_content);
+				var word_content=CryptoJS.enc.Base64.parse(base64_content);
+				var notation_content=eval('\"'+word_content.toString(CryptoJS.enc.Utf8)+'\"');
+				var content=notation_content.slice(2,-1);
+				$("#content").html(content);
+				highlight();
+			}
+
+
+		}
+	});
+}
+function encode_obj(data){
+	/*encrypt input dict return both dict and cipher
+	input:{jobid:plain int,posturl:plain str}
+	output:{
+			jobid:base64(encrypted data),
+			posturl:base64(encrypted data),
+			cipher:{iv:base64(iv)}
+		}
+	*/
+	var post_key=$("#post_key").val();
+	key=CryptoJS.MD5(post_key);
+	iv=CryptoJS.lib.WordArray.random(16);
+	var post_url=$("#posttitle").children("a").attr("href").split("/")[2];
+
+	var out_data={
+		jobid:CryptoJS.AES.encrypt(data.jobid,key,{iv:iv,mode:CryptoJS.mode.CFB,padding:CryptoJS.pad.Pkcs7}).ciphertext.toString(CryptoJS.enc.Base64),
+		posturl:CryptoJS.AES.encrypt(data.posturl,key,{iv:iv,mode:CryptoJS.mode.CFB,padding:CryptoJS.pad.Pkcs7}).ciphertext.toString(CryptoJS.enc.Base64),
+		cipher:{
+			iv:CryptoJS.enc.Base64.stringify(iv),
+			key:CryptoJS.enc.Base64.stringify(key)
+		}
+	};
+
+	return out_data;
+}
+function decrypt_obj(data){
+	/*decrypt base64 encoded string*/
+	data=CryptoJS.AES.decrypt(data,key,{iv:iv,mode:CryptoJS.mode.CFB,padding:CryptoJS.pad.Pkcs7}).toString(CryptoJS.enc.Utf8);
+	return data;
+}
+</script>
+{%endblock  endscript%}
+

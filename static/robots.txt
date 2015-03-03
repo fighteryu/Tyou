@@ -1,0 +1,7 @@
+User-agent: *
+Disallow:/admin/
+Disallow:/tag/
+Disallow:/link/
+Disallow:/search/
+Disallow:/rss/
+Disallow:/comment/

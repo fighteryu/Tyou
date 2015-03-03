@@ -1,0 +1,27 @@
+{% macro pager_funct(url,pager,param="",prefix="") -%}
+{%if pager.pagenumber >=1%}
+<ul class="pagination" style="margin:0 auto">
+  <li><span>&laquo;</span></li>
+  {%if param %}
+  	{%for i in range (pager.pagenumber)%}
+	  	{%if pager.currentpage==i+1%}
+	 		<li><span class="active">{{pager.currentpage}}</span></li>
+	  	{%else%}
+	  		<li><a href="{{url}}/{{prefix}}{{i+1}}?{{param}}" >{{i+1}}</a></li>
+	  	{%endif%}
+	  {%endfor%}
+  {%else%}
+	  {%for i in range (pager.pagenumber)%}
+	  	{%if pager.currentpage==i+1%}
+	 		<li><span class="active">{{pager.currentpage}}</span></li>
+	  	{%else%}
+	  		<li><a href="{{url}}/{{prefix}}{{i+1}}" >{{i+1}}</a></li>
+	  	{%endif%}
+	  {%endfor%}
+  {%endif%}
+  <li><span >&raquo;</span></li>
+</ul>
+{%endif%}
+{%- endmacro %}
+
+

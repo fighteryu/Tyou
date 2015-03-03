@@ -1,0 +1,49 @@
+{%extends "part/base"%}
+{%block title%}Tonbo blog--天气{%endblock title%}
+{%block postbody%}
+
+{%endblock postbody%}
+
+{%block  endscript%}
+<script type="text/javascript">
+$(document).ready(function(){
+	getLocation();
+});
+function getLocation(){
+	if (navigator.geolocation)
+	{
+		navigator.geolocation.getCurrentPosition(showPosition,showError);
+	}
+	else{
+		$("#frame").text("浏览器不支持获取当前位置。");
+	}
+}
+function showPosition(position){
+	var lat=position.coords.latitude;
+	var lon=position.coords.longitude;
+	var embed='<iframe id="forecast_embed" type="text/html" frameborder="0" height="245" width="100%" src="http://forecast.io/embed/#units=ca&lat='+String(lat)+'&lon='+String(lon)+'&name=Local'+'"></iframe>';
+	$("#frame").html(embed);
+ }
+
+function showError(error)
+  {
+  	x=document.getElementById("frame");
+  switch(error.code) 
+    {
+    case error.PERMISSION_DENIED:
+      x.innerHTML="用户不允许浏览器获取当前位置。"
+      break;
+    case error.POSITION_UNAVAILABLE:
+      x.innerHTML="无所在位置天气信息。"
+      break;
+    case error.TIMEOUT:
+      x.innerHTML="请求超时。"
+      break;
+    case error.UNKNOWN_ERROR:
+      x.innerHTML="未知错误。"
+      break;
+    }
+  }
+
+</script>
+{%endblock  endscript%}

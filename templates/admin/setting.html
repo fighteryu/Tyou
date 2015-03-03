@@ -1,0 +1,58 @@
+{%extends "part/adminbase"%}
+{%block title%}Admin Blog--参数设置{%endblock title%}
+
+{%block admincontent%}
+<form action="/admin/setting" method="post" name="general-setting">
+	<h4>博客设置</h4>
+	<div class="input-group">
+		<span class="input-group-addon">博客名称</span>		
+		<input type="text"  name="BLOGNAME" id="blog_name" value="{{config.BLOGNAME}}" class="form-control">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">博客URL</span>		
+		<input type="text"  name="BLOGURL" id="blogurl" value="{{config.BLOGURL}}" class="form-control" placeholder="http://127.0.0.1:8080">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">公告ID</span>		
+		<input type="text"  name="ANNOUNCE_ID" id="blog_announce_id" value="{{config.ANNOUNCE_ID}}" class="form-control" placeholder="置为-1则不显示公告">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">公告字数长度</span>		
+		<input type="text"  name="ANNOUNCE_LENGTH" id="blog_announce_length" value="{{config.ANNOUNCE_LENGTH}}" class="form-control">
+	</div>
+	<h4>用户页面设置</h4>
+	<div class="input-group">
+		<span class="input-group-addon">文章显示数</span>		
+		<input type="text"  name="PER_PAGE" id="page_post_count" value="{{config.PER_PAGE}}" class="form-control">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">侧边栏标签数</span>		
+		<input type="text"  name="TAG_COUNT" id="page_tag_count" value="{{config.TAG_COUNT}}" class="form-control">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">侧边栏链接数</span>		
+		<input type="text"  name="LINK_COUNT" id="page_link_count" value="{{config.LINK_COUNT}}" class="form-control">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">侧边栏评论数</span>		
+		<input type="text"  name="COMMENT_COUNT" id="page_comment_count" value="{{config.COMMENT_COUNT}}" class="form-control">
+	</div>
+	<h4>管理页面设置</h4>
+	<div class="input-group">
+		<span class="input-group-addon">管理页每页条目数</span>		
+		<input type="text"  name="ADMIN_ITEM_COUNT" id="admin_item_count" value="{{config.ADMIN_ITEM_COUNT}}" class="form-control">
+	</div>
+	<div class="input-group">
+		<span class="input-group-addon">RSS 订阅条目数</span>		
+		<input type="text"  name="RSS_ITEM_COUNT" id="rss_item_count" value="{{config.RSS_ITEM_COUNT}}" class="form-control">
+	</div>
+
+	<button class="btn btn-primary" id="submit">Submit</button>
+</form>
+<br/>
+<form action="/admin/import" method="post" enctype="multipart/form-data">
+	<a type="button" class="btn btn-primary" href="/admin/export">备份</a>
+	<input type="submit" class="btn btn-primary" vaule="复原（初次搭建博客时使用）"/>
+	<input id="fileupload" name ="file" type="file">
+</form>
+{%endblock admincontent%}
