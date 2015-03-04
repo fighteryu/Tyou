@@ -4,6 +4,7 @@ Tyou
 Another Flask based blog
 
 To deploy this blog:
+
 0. install libmysqlclient-dev,python-dev (ubuntu)
 1. run `pip install -r requirements.txt`
 2. edit config.py, add username,password,database to config 
