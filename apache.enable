@@ -1,11 +1,24 @@
-<VirtualHost *>
+<VirtualHost ifconfiger.com:80>
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://ifconfiger.com$1 [R=301,L]
+</VirtualHost>
+
+<VirtualHost ifconfiger.com:443>
         ServerName ifconfiger.com
-        WSGIScriptAlias / /home/fzlee/Tyou/app.wsgi
+        WSGIScriptAlias / /var/www/Tyou/app.wsgi
+        alias /static /var/www/Tyou/static
+        alias /favicon.ico /var/www/Tyou/static/favicon.ico
+        alias /robots.txt /var/www/Tyou/static/robots.txt
         <Directory /var/www/Tyou>
                 Order deny,allow
                 Allow from all
         </Directory>
-        alias /static /var/www/Tyou/static
-        alias /favicon.ico /var/www/Tyou/static/favicon.ico
-        alias /robots.txt /var/www/Tyou/static/robots.txt
+    SSLEngine On 
+    SSLCertificateFile /path/to/crtcrt
+    SSLCertificateChainFile /path/to/chain
+    SSLCertificateKeyFile /path/to/key
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	LogLevel warn
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
