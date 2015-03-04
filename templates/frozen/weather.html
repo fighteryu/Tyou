@@ -1,7 +1,7 @@
 {%extends "part/base"%}
 {%block title%}Tonbo blog--天气{%endblock title%}
 {%block postbody%}
-
+<div id="frame" style="padding:50px;"></div>
 {%endblock postbody%}
 
 {%block  endscript%}
@@ -21,7 +21,7 @@ function getLocation(){
 function showPosition(position){
 	var lat=position.coords.latitude;
 	var lon=position.coords.longitude;
-	var embed='<iframe id="forecast_embed" type="text/html" frameborder="0" height="245" width="100%" src="http://forecast.io/embed/#units=ca&lat='+String(lat)+'&lon='+String(lon)+'&name=Local'+'"></iframe>';
+	var embed='<iframe id="forecast_embed" type="text/html" frameborder="0" height="245" width="100%" src="https://forecast.io/embed/#units=ca&lat='+String(lat)+'&lon='+String(lon)+'&name=Local'+'"></iframe>';
 	$("#frame").html(embed);
  }
 
