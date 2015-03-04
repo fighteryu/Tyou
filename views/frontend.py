@@ -40,21 +40,48 @@ def index(page=1):
 
 @frontend.route('/page/<url>')
 def page(url=None):
+    """display post"""
     post = Post.get_by_url(url=url, public_only=False)
     if post and post.allow_visit:
         sidebar = gen_sidebar(g.config)
         commentlist = Comment.get_by_post_id(post.post_id)
-        return render_template('page.html',
-                               blogname=g.config["BLOGNAME"],
-                               sidebar=sidebar,
-                               post=post,
-                               commentlist=commentlist,
-                               is_admin=True)
+        return render_template(
+            'page.html',
+            blogname=g.config["BLOGNAME"],
+            sidebar=sidebar,
+            post=post,
+            commentlist=commentlist,
+            is_admin=True)
     else:
         abort(404)
 
 
-@frontend.route('/comment', methods=["DELETE", "POST"])
+@frontend.route("/key", methods=["POST"])
+@frontend.route("/key/", methods=["POST"])
+def key():
+    data = request.json
+    if g.config.get("POST_PASSWORD", "") != data.get("post_password", None):
+        return jsonify(
+            validate=False,
+            error=True,
+            message=u"Password error!")
+
+    post = Post.get_by_url(url=data.get("posturl", ""), public_only=False)
+    if not post:
+        return jsonify(
+            validate=True,
+            error=True,
+            message="Post doesn't exists"
+        )
+    else:
+        return jsonify(
+            validate=True,
+            error=False,
+            message=post.content
+        )
+
+
+@frontend.route("/comment", methods=["DELETE", "POST"])
 def comment():
     if request.method == "DELETE":
         if not session.get("is_admin", False):
@@ -85,17 +112,17 @@ def comment():
             return json.dumps({'has_error': True, "message": "文章不存在"})
         elif post.allow_comment is False:
             return json.dumps({"has_error": True, "message": "不允许评论"})
-        comment = Comment(post_id=post.post_id,
-                          url=post.url,
-                          email=email,
-                          nickname=nickname,
-                          content=urllib.unquote(content),
-                          to=to,
-                          refid=refid,
-                          create_time=datetime.now(),
-                          ip=request.remote_addr,
-                          website=website
-                          )
+        comment = Comment(
+            post_id=post.post_id,
+            url=post.url,
+            email=email,
+            nickname=nickname,
+            content=urllib.unquote(content),
+            to=to,
+            refid=refid,
+            create_time=datetime.now(),
+            ip=request.remote_addr,
+            website=website)
         comment.save()
 
         # keep username, website, email to session

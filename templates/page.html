@@ -15,7 +15,7 @@
 </form>
 <div class="bigwidget">
 	<header>
-	<h2 id="posttitle" {%if post.need_key%}_encrypted="true"{%endif%}>
+	<h2 id="posttitle">
 		<a href="/page/{{post.url}}">
 		{%if post.need_key%}<span class="glyphicon glyphicon-lock"></span>{%endif%}{{post.title}}
 		</a>
@@ -32,9 +32,10 @@
 		<article id="content" class="content">{{post.content | safe}}</article>
 	{%else%}
 		<div class="searchform" style="">
-			<input type="password" id="post_key" placeholder="输入解密Key以继续,8-16数字、字母以及下划线组合">
+			<input type="password" id="post_password" placeholder="输入解密Key以继续,8-16数字、字母以及下划线组合">
 			<input type="button" id="decrypt" name="decrypt button" class="btn btn-primary" value="GO" onclick="show_encrypted_data();return false;"/>
 		</div>
+		<div class="divider"></div>
 		<article id="content" class="content"></article>
 	{%endif%}
 	<div class="divider"></div>
@@ -114,21 +115,16 @@
 <script src="/static/js/lib/syntaxhighlighter/scripts/shAutoloader.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-	if($("#posttitle").attr("_encrypted")=="true"){
-		loadfile("/static/js/lib/CryptoJS3.1.2/rollups/aes.js","js");
-		loadfile("/static/js/lib/CryptoJS3.1.2/components/mode-cfb.js","js");
-		loadfile("/static/js/lib/CryptoJS3.1.2/rollups/md5.js","js");
-		loadfile("/static/js/lib/CryptoJS3.1.2/components/enc-base64-min.js","js");
-		loadfile("/static/js/lib/CryptoJS3.1.2/components/enc-utf16-min.js","js");
-		$("#post_key").bind('keyup',function(e){
-    		if(e.keyCode=='13'){
-				$("#decrypt").click();
-			}
-		});
-	}
-	else{
-		highlight();
-	}
+	/*carrage return event */
+	$("#post_password").bind('keyup',function(e){
+   		if(e.keyCode=='13'){
+			$("#decrypt").click();
+		}
+	});
+	/*hightlight code*/
+	highlight();
+
+	/*commen event*/
 	makecommenthtml=$("#comment-widget").html();
 	$(".c-quote").click(function(){
 		$(".c-form").remove();
@@ -253,81 +249,35 @@ function gen_comment_obj(obj){
 	newcomment=JSON.stringify(newcomment);
 	return newcomment;
 }
+
 function show_encrypted_data(){
-	//client firstly request a job ID first. 
 	$("#content").html("");
-	var _JOB_ID=null;
-	$.ajax({
-		type:"get",
-		url:"/key/",
-		async:false,
-		success:function (data){
-			data=JSON.parse(data);
-			_JOB_ID=data.jobid;
-		}
-	});
 	//client secondly request for encrypted data
 	data={
-		"jobid":_JOB_ID,
-		// "posturl":"1234567890123456"
+		"post_password":$("#post_password").val(),	
 		"posturl":$("#posttitle").children("a").attr("href").split("/")[2]
 	};
-	data=encode_obj(data);
+	
 	$.ajax({
 		type:"post",
 		url:"/key/",
-		data:JSON.stringify(data,false),
+		data:JSON.stringify(data),
 		contentType:"application/json",
 		success:function (data){
-			data=JSON.parse(data);
 			if(data.validate==false){
-				$("#content").html('<p class="text-danger" style="text-align:center;">错误密钥<p>');
+				$("#content").html('<p class="text-danger" style="text-align:center;">'+ data.message +'<p>');
 			}
 			else if (data.error==true){
 				$("#content").html('<p class="text-danger" style="text-align:center;">文章未发现<p>');
 			}
 			else{
-				var base64_content=decrypt_obj(data.post_content);
-				var word_content=CryptoJS.enc.Base64.parse(base64_content);
-				var notation_content=eval('\"'+word_content.toString(CryptoJS.enc.Utf8)+'\"');
-				var content=notation_content.slice(2,-1);
-				$("#content").html(content);
+				$("#content").html(data.message);
 				highlight();
 			}
 
 
 		}
 	});
-}
-function encode_obj(data){
-	/*encrypt input dict return both dict and cipher
-	input:{jobid:plain int,posturl:plain str}
-	output:{
-			jobid:base64(encrypted data),
-			posturl:base64(encrypted data),
-			cipher:{iv:base64(iv)}
-		}
-	*/
-	var post_key=$("#post_key").val();
-	key=CryptoJS.MD5(post_key);
-	iv=CryptoJS.lib.WordArray.random(16);
-	var post_url=$("#posttitle").children("a").attr("href").split("/")[2];
-
-	var out_data={
-		jobid:CryptoJS.AES.encrypt(data.jobid,key,{iv:iv,mode:CryptoJS.mode.CFB,padding:CryptoJS.pad.Pkcs7}).ciphertext.toString(CryptoJS.enc.Base64),
-		posturl:CryptoJS.AES.encrypt(data.posturl,key,{iv:iv,mode:CryptoJS.mode.CFB,padding:CryptoJS.pad.Pkcs7}).ciphertext.toString(CryptoJS.enc.Base64),
-		cipher:{
-			iv:CryptoJS.enc.Base64.stringify(iv),
-			key:CryptoJS.enc.Base64.stringify(key)
-		}
-	};
-
-	return out_data;
-}
-function decrypt_obj(data){
-	/*decrypt base64 encoded string*/
-	data=CryptoJS.AES.decrypt(data,key,{iv:iv,mode:CryptoJS.mode.CFB,padding:CryptoJS.pad.Pkcs7}).toString(CryptoJS.enc.Utf8);
-	return data;
 }
 </script>
 {%endblock  endscript%}

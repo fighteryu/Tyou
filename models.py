@@ -195,8 +195,6 @@ class Post(db.Model):
         addlist = [item for item in newtags if item not in oldtags]
         minuslist = [item for item in oldtags if item not in newtags]
 
-        print new_string
-        print
         Tag.add(addlist)
         Tag.minus(minuslist)
 
