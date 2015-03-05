@@ -92,22 +92,22 @@ class Post(db.Model):
         self.num_lookup = 0
 
     @classmethod
-    def get_page(cls, offset, limit, public_only=True):
+    def get_page(cls, offset, limit, **kargs):
         """If pubic_only == False , return posts even if allow_visit = False
         """
-        if public_only is True:
-            return cls.query.filter_by(allow_visit=True).\
-                order_by(cls.post_id.desc()).limit(limit).offset(offset).all()
-        else:
-            return cls.query.order_by(cls.post_id.desc()).\
-                limit(limit).offset(offset).all()
+        query = cls.query
+        for key in kargs:
+            query = query.filter(cls.__dict__[key] == kargs[key])
+
+        query = query.order_by(cls.post_id.desc())
+        return query.limit(limit).offset(offset).all()
 
     @classmethod
-    def count(cls, public_only=True):
-        if public_only is True:
-            return cls.query.filter_by(allow_visit=True).count()
-        else:
-            return cls.query.count()
+    def count(cls, **kargs):
+        query = cls.query
+        for key in kargs:
+            query = query.filter(cls.__dict__[key] == kargs[key])
+        return query.count()
 
     @classmethod
     def get_by_id(cls, post_id, public_only=True):

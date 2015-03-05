@@ -21,9 +21,9 @@ from other import frontend
 @frontend.route("/index/<int:page>")
 def index(page=1):
     offset = g.config["PER_PAGE"]*(page-1)
-    postlist = Post.get_page(offset, g.config["PER_PAGE"])
+    postlist = Post.get_page(offset, g.config["PER_PAGE"], allow_visit=True)
     pager = gen_pager(
-        Post.count(),
+        Post.count(allow_visit=True),
         g.config["PER_PAGE"],
         page)
     sidebar = gen_sidebar(g.config)

@@ -29,23 +29,21 @@
 				<a href="/admin/overview/{{post.post_id}}">[预览]</a>
 				<a href="/page/{{post.url}}">{{post.title}}</a>
 			</td>
-			<td>{%if post.is_original%}是{%else%}否{%endif%}</td>
+			{%if post.is_original%}
+			<td><a href="/admin/postlist?is_original=true">是</a></td>{%else%}
+			<td><a href="/admin/postlist?is_original=false">否</a></td>{%endif%}
 			{%if post.allow_visit%}
-			<td>发布</td>
-			{%else%}
-			<td>不发布</td>
-			{%endif%}
+			<td><a href="/admin/postlist?allow_visit=true">发布</a></td>{%else%}
+			<td><a href="/admin/postlist?allow_visit=false">不发布</a></td>{%endif%}
 			{%if post.allow_comment%}
-			<td>允许</td>
-			{%else%}
-			<td>不允许</td>
-			{%endif%}
+			<td><a href="/admin/postlist?allow_comment=true">允许</a></td>{%else%}
+			<td><a href="/admin/postlist?allow_comment=false">不允许</a></td>{%endif%}
 		</tr>
 		{%endfor%}				
 	</tbody>
 </table>
 {%from 'part/pager' import pager_funct%}
-{{pager_funct('/admin/postlist',pager)|safe}}
+{{pager_funct('/admin/postlist',pager, parameter)|safe}}
 {%endblock admincontent%}
 
 {%block  endscript%}

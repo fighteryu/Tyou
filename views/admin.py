@@ -22,17 +22,37 @@ adminor = Blueprint('admin', __name__, template_folder="../templates")
 @admin_required
 def adminpostlist(page=1):
     perpage = g.config["PER_PAGE"]
+    args = request.args
+    kargs = {}
+    if "is_original" in args and args["is_original"] == "true":
+        kargs["is_original"] = True
+    elif "is_original" in args and args["is_original"] == "false":
+        kargs["is_original"] = False
+
+    if "allow_visit" in args and args["allow_visit"] == "true":
+        kargs["allow_visit"] = True
+    elif "allow_visit" in args and args["allow_visit"] == "false":
+        kargs["allow_visit"] = False
+
+    if "allow_comment" in args and args["allow_comment"] == "true":
+        kargs["allow_comment"] = True
+    elif "allow_comment" in args and args["allow_comment"] == "false":
+        kargs["allow_comment"] = False
+
     postlist = Post.get_page(
         offset=(page-1)*perpage,
         limit=perpage,
-        public_only=False)
-    pager = gen_pager(Post.count(public_only=False),
+        **kargs)
+
+    pager = gen_pager(Post.count(**kargs),
                       g.config["PER_PAGE"],
                       page)
+    parameter = request.query_string
     return render_template('admin/postlist.html',
                            postlist=postlist,
                            admin_url="pagelist",
-                           pager=pager)
+                           pager=pager,
+                           parameter=parameter)
 
 
 @adminor.route("/post/<url>/inplace")
@@ -40,7 +60,7 @@ def adminpostlist(page=1):
 def pageinplace(url=None):
     """Check if a url is in place
     """
-    post = Post.get_by_url(url=url, public_only=False)
+    post = Post.get_by_url(url=url)
     if post:
         return jsonify(success=True,
                        in_place=True)
