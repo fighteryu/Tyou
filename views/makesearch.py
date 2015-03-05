@@ -40,7 +40,7 @@ def dosearch(page=1):
             sidebar=sidebar,
             pager=pager,
             postlist=postlist,
-            param="tagname=" + request.args['tagname'])
+            parameter=request.query_string)
 
     # Text search
     if 'keyword' in request.args:
@@ -66,4 +66,4 @@ def dosearch(page=1):
             postlist=postlist,
             sidebar=sidebar,
             pager=pager,
-            param="keyword=" + request.args["keyword"])
+            parameter=request.query_string)

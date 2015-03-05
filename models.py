@@ -10,6 +10,7 @@ import json
 import base64
 import hashlib
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 
 db = SQLAlchemy()
 
@@ -146,7 +147,10 @@ class Post(db.Model):
             return []
         query = cls.query.filter_by(allow_visit=True)
         for word in words:
-            query = query.filter(cls.raw_content.like("%"+word+"%"))
+            query = query.filter(or_(
+                cls.raw_content.like("%" + word + "%"),
+                cls.title.like("%" + word + "%")
+            ))
         return query.order_by(
             cls.post_id.desc()).offset(offset).limit(limit).all()
 
@@ -156,7 +160,10 @@ class Post(db.Model):
             return 0
         query = cls.query.filter_by(allow_visit=True)
         for word in words:
-            query = query.filter(cls.raw_content.like("%"+word+"%"))
+            query = query.filter(or_(
+                cls.raw_content.like("%" + word + "%"),
+                cls.title.like("%" + word + "%")
+            ))
         return query.count()
 
     @classmethod

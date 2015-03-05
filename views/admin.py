@@ -47,12 +47,11 @@ def adminpostlist(page=1):
     pager = gen_pager(Post.count(**kargs),
                       g.config["PER_PAGE"],
                       page)
-    parameter = request.query_string
     return render_template('admin/postlist.html',
                            postlist=postlist,
                            admin_url="pagelist",
                            pager=pager,
-                           parameter=parameter)
+                           parameter=request.query_string)
 
 
 @adminor.route("/post/<url>/inplace")
