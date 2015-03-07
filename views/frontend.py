@@ -11,7 +11,7 @@ import urllib
 from datetime import datetime
 from flask import request, jsonify, g, abort, render_template,\
     flash, redirect, url_for, session
-from models import gen_sidebar, Post, Comment, User
+from models import Post, Comment, User
 from helpers import gen_pager
 
 from other import frontend
@@ -26,13 +26,11 @@ def index(page=1):
         Post.count(allow_visit=True),
         g.config["PER_PAGE"],
         page)
-    sidebar = gen_sidebar(g.config)
     if postlist or page == 1:
         return render_template(
             "index.html",
             blogname=g.config["BLOGNAME"],
             postlist=postlist,
-            sidebar=sidebar,
             pager=pager)
     else:
         return render_template("error/404.html")
@@ -43,12 +41,10 @@ def page(url=None):
     """display post"""
     post = Post.get_by_url(url=url, public_only=False)
     if post and post.allow_visit:
-        sidebar = gen_sidebar(g.config)
         commentlist = Comment.get_by_post_id(post.post_id)
         return render_template(
             'page.html',
             blogname=g.config["BLOGNAME"],
-            sidebar=sidebar,
             post=post,
             commentlist=commentlist,
             is_admin=True)
@@ -139,8 +135,7 @@ def login():
     if request.method == "GET":
         if "username" in session:
             return redirect(url_for("admin.setting"))
-        sidebar = gen_sidebar(g.config)
-        return render_template("login.html", sidebar=sidebar)
+        return render_template("login.html")
 
     elif request.method == "POST":
         username = request.form["username"]

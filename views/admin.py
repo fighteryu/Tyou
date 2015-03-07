@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, render_template, g, request, abort, jsonify,\
     redirect, url_for
-from models import Post, Comment, Link, Media, User, gen_sidebar
+from models import Post, Comment, Link, Media, User
 from helpers import gen_pager
 from decorators import admin_required
 
@@ -132,11 +132,9 @@ def editpost(post_id=None):
 def overview(post_id=-1):
     post = Post.get_by_id(post_id=post_id, public_only=False)
     if post:
-        sidebar = gen_sidebar(g.config)
         return render_template('page.html',
                                admin_url="overview",
-                               post=post,
-                               sidebar=sidebar)
+                               post=post)
     else:
         abort(404)
 

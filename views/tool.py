@@ -1,18 +1,13 @@
-from flask import Blueprint, render_template, current_app
-from models import gen_sidebar
+from flask import Blueprint, render_template
 
 tool = Blueprint('tool', __name__, template_folder="../templates")
 
 
 @tool.route("/weather")
 def weather():
-    sidebar = gen_sidebar(current_app.config)
-    return render_template('frozen/weather.html',
-                           sidebar=sidebar)
+    return render_template('frozen/weather.html')
 
 
 @tool.route("/qrcode")
 def qrcode():
-    sidebar = gen_sidebar(current_app.config)
-    return render_template("frozen/qrcode.html",
-                           sidebar=sidebar)
+    return render_template("frozen/qrcode.html")

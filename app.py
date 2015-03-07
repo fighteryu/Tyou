@@ -9,7 +9,8 @@ reload(sys)
 sys.setdefaultencoding("utf8")
 
 import os
-from flask import Flask, g, request, jsonify, render_template, session
+from flask import Flask, g, request, jsonify, render_template, session,\
+    current_app
 import config
 from models import db, gen_sidebar, User
 from views import MODULES
@@ -58,6 +59,7 @@ def configure_before_handlers(app):
     def init_setup():
         session.permanent = True
         g.config = User.get_config() or app.config
+        g.sidebar = gen_sidebar(current_app.config)
 
 
 def configure_errorhandlers(app):
@@ -65,10 +67,8 @@ def configure_errorhandlers(app):
     def page_not_found(error):
         if request.is_xhr:
             return jsonify(error='Sorry, page not found')
-        sidebar = gen_sidebar(app.config)
         return render_template(
             "error/404.html",
-            sidebar=sidebar,
             error=error), 404
 
     @app.errorhandler(500)

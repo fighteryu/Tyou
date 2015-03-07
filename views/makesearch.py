@@ -6,7 +6,7 @@
 
 """
 from flask import Blueprint, render_template, request, g
-from models import Post, gen_sidebar
+from models import Post
 from helpers import gen_pager
 
 makesearch = Blueprint('search', __name__, template_folder="../templates")
@@ -16,7 +16,6 @@ makesearch = Blueprint('search', __name__, template_folder="../templates")
 @makesearch.route('/')
 @makesearch.route('/<int:page>')
 def dosearch(page=1):
-    sidebar = gen_sidebar(g.config)
     # Tag search
     if "tagname" in request.args:
         tagname = request.args.get("tagname").strip()
@@ -37,7 +36,6 @@ def dosearch(page=1):
             "search.html",
             searchtype="tagsearch",
             searchcontent=tagname,
-            sidebar=sidebar,
             pager=pager,
             postlist=postlist,
             parameter=request.query_string)
@@ -64,6 +62,5 @@ def dosearch(page=1):
             searchtype="textsearch",
             searchcontent=" ".join(words),
             postlist=postlist,
-            sidebar=sidebar,
             pager=pager,
             parameter=request.query_string)
