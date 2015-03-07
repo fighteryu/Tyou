@@ -280,12 +280,16 @@ def export():
             "display": media.display
         })
 
-    data = json.dumps({
-        "site": request.url_root,
-        "links": ex_link,
-        "comments": ex_comment,
-        "posts": ex_post
-    })
+    data = json.dumps(
+        {
+            "site": request.url_root,
+            "links": ex_link,
+            "comments": ex_comment,
+            "posts": ex_post
+        },
+        sort_keys=True,
+        indent=4,
+        separators=(',', ': '))
 
     # compress data and send as zip
     from io import BytesIO
