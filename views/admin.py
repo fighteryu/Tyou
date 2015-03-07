@@ -9,7 +9,7 @@ import re
 import json
 from datetime import datetime
 from flask import Blueprint, render_template, g, request, abort, jsonify,\
-    redirect, url_for
+    redirect, url_for, send_file
 from models import Post, Comment, Link, Media, User
 from helpers import gen_pager
 from decorators import admin_required
@@ -280,11 +280,23 @@ def export():
             "display": media.display
         })
 
-    return jsonify(
-        site=request.url_root,
-        links=ex_link,
-        comments=ex_comment,
-        posts=ex_post)
+    data = json.dumps({
+        "site": request.url_root,
+        "links": ex_link,
+        "comments": ex_comment,
+        "posts": ex_post
+    })
+
+    # compress data and send as zip
+    from io import BytesIO
+    import zipfile
+    filename = "export " + datetime.now().strftime("%Y-%m-%d %H:%M")
+    memory_file = BytesIO()
+    with zipfile.ZipFile(memory_file, 'w') as zf:
+        zf.writestr(filename + ".json", data)
+    memory_file.seek(0)
+    return send_file(memory_file,
+                     attachment_filename=filename + ".zip", as_attachment=True)
 
 
 @adminor.route("/import", methods=["POST"])
