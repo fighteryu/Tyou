@@ -11,3 +11,8 @@ def weather():
 @tool.route("/qrcode")
 def qrcode():
     return render_template("frozen/qrcode.html")
+
+
+@tool.route("/markdown")
+def markdown():
+    return render_template("frozen/markdown.html")
