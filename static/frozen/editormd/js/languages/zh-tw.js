@@ -1,19 +1,9 @@
-/*
- * Editor.md
- * @file        languages\zh-tw.js 
- * @version     v1.1.9 
- * @description A simple online markdown editor.
- * @license     MIT License
- * @author      Pandao
- * {@link       https://github.com/pandao/editor.md}
- * @updateTime  2015-03-04
- */
-
 (function(){
     var factory = function (exports) {
         var lang = {
             name : "zh-tw",
-            description : "開源在線Markdown編輯器<br/>A simple markdown doucment online editor.",
+            description : "開源在線Markdown編輯器<br/>Open source online Markdown editor.",
+            tocTitle    : "目錄",
             toolbar     : {
                 undo             : "撤銷（Ctrl+Z）",
                 redo             : "重做（Ctrl+Y）",
@@ -21,6 +11,9 @@
                 del              : "刪除線",
                 italic           : "斜體",
                 quote            : "引用",
+                ucwords          : "將所選的每個單詞首字母轉成大寫",
+                uppercase        : "將所選文本轉成大寫",
+                lowercase        : "將所選文本轉成小寫",
                 h1               : "標題1",
                 h2               : "標題2",
                 h3               : "標題3",
@@ -31,39 +24,46 @@
                 "list-ol"        : "有序列表",
                 hr               : "横线",
                 link             : "链接",
-                anchor           : "錨點",
+                "reference-link" : "引用鏈接",
                 image            : "圖片",
                 code             : "行內代碼",
-                "code-block-tab" : "預格式文本 / 代碼塊（縮進風格）",
+                "preformatted-text" : "預格式文本 / 代碼塊（縮進風格）",
                 "code-block"     : "代碼塊（多語言風格）",
+                table            : "添加表格",
                 datetime         : "日期時間",
+                emoji            : "Emoji 表情",
+                "html-entities"  : "HTML 實體字符",
+                pagebreak        : "插入分頁符",
                 watch            : "關閉實時預覽",
                 unwatch          : "開啟實時預覽",
-                preview          : "全窗口預覽HTML（可按ESC還原）",
-                fullscreen       : "全屏（可按ESC還原）",
+                preview          : "全窗口預覽HTML（按 Shift + ESC 退出）",
+                fullscreen       : "全屏（按 ESC 退出）",
                 clear            : "清空",
+                search           : "搜尋",
+                help             : "使用幫助",
                 info             : "關於" + exports.title
             },
             buttons : {
                 enter  : "確定",
-                cancel : "取消"
+                cancel : "取消",
+                close  : "關閉"
             },
             dialog : {
                 link   : {
                     title    : "添加鏈接",
                     url      : "鏈接地址",
                     urlTitle : "鏈接標題",
-                    urlEmpty : "錯誤：請填寫鏈接地址。",
-                    titleEmpty : "錯誤：請填寫鏈接標題。"
+                    urlEmpty : "錯誤：請填寫鏈接地址。"
                 },
-                anchor : {
-                    title    : "添加錨點鏈接",
-                    name     : "錨點名稱",
+                referenceLink : {
+                    title    : "添加引用鏈接",
+                    name     : "引用名稱",
                     url      : "鏈接地址",
+                    urlId    : "鏈接ID",
                     urlTitle : "鏈接標題",
-                    nameEmpty: "錯誤：錨點名稱不能為空。",
-                    titleEmpty : "錯誤：請填寫錨點鏈接標題。",
-                    urlEmpty : "錯誤：請填寫錨點鏈接地址。"
+                    nameEmpty: "錯誤：引用鏈接的名稱不能為空。",
+                    idEmpty  : "錯誤：請填寫引用鏈接的ID。",
+                    urlEmpty : "錯誤：請填寫引用鏈接的URL地址。"
                 },
                 image  : {
                     title    : "添加圖片",
@@ -75,17 +75,23 @@
                     uploadFileEmpty  : "錯誤：上傳的圖片不能為空！",
                     formatNotAllowed : "錯誤：只允許上傳圖片文件，允許上傳的圖片文件格式有："
                 },
-                tabCodeBlock : {
+                preformattedText : {
                     title             : "添加預格式文本或代碼塊", 
-                    codeEmptyAlert    : "錯誤：請填寫預格式文本或代碼的內容。"
+                    emptyAlert        : "錯誤：請填寫預格式文本或代碼的內容。"
                 },
                 codeBlock : {
-                    title             : "添加代碼塊",                    
+                    title             : "添加代碼塊",                 
                     selectLabel       : "代碼語言：",
                     selectDefaultText : "請語言代碼語言",
                     otherLanguage     : "其他語言",
                     unselectedLanguageAlert : "錯誤：請選擇代碼所屬的語言類型。",
                     codeEmptyAlert    : "錯誤：請填寫代碼內容。"
+                },
+                htmlEntities : {
+                    title : "HTML實體字符"
+                },
+                help : {
+                    title : "使用幫助"
                 }
             }
         };

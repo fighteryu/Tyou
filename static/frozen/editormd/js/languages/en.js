@@ -1,19 +1,9 @@
-/*
- * Editor.md
- * @file        languages\en.js 
- * @version     v1.1.9 
- * @description A simple online markdown editor.
- * @license     MIT License
- * @author      Pandao
- * {@link       https://github.com/pandao/editor.md}
- * @updateTime  2015-03-04
- */
-
 (function(){
     var factory = function (exports) {
         var lang = {
             name : "en",
-            description : "A simple markdown doucment online editor.",
+            description : "Open source online Markdown editor.",
+            tocTitle    : "Table of Contents",
             toolbar : {
                 undo             : "Undo(Ctrl+Z)",
                 redo             : "Redo(Ctrl+Y)",
@@ -21,6 +11,9 @@
                 del              : "Strikethrough",
                 italic           : "Italic",
                 quote            : "Block quote",
+                ucwords          : "Words first letter convert to uppercase",
+                uppercase        : "Selection text convert to uppercase",
+                lowercase        : "Selection text convert to lowercase",
                 h1               : "Heading 1",
                 h2               : "Heading 2",
                 h3               : "Heading 3",
@@ -29,41 +22,48 @@
                 h6               : "Heading 6",
                 "list-ul"        : "Unordered list",
                 "list-ol"        : "Ordered list",
-                hr               : "Horizontal line",
+                hr               : "Horizontal rule",
                 link             : "Link",
-                anchor           : "Anchor",
+                "reference-link" : "Reference link",
                 image            : "Image",
                 code             : "Code inline",
-                "code-block-tab" : "Preformatted text / Code block (Tab indent)",
+                "preformatted-text" : "Preformatted text / Code block (Tab indent)",
                 "code-block"     : "Code block (Multi-languages)",
+                table            : "Tables",
                 datetime         : "Datetime",
+                emoji            : "Emoji",
+                "html-entities"  : "HTML Entities",
+                pagebreak        : "Page break",
                 watch            : "Unwatch",
                 unwatch          : "Watch",
-                preview          : "HTML Preview (Enter ESC exit)",
-                fullscreen       : "Fullscreen (Enter ESC exit)",
+                preview          : "HTML Preview (Press Shift + ESC exit)",
+                fullscreen       : "Fullscreen (Press ESC exit)",
                 clear            : "Clear",
+                search           : "Search",
+                help             : "Help",
                 info             : "About " + exports.title
             },
             buttons : {
                 enter  : "Enter",
-                cancel : "Cancel"
+                cancel : "Cancel",
+                close  : "Close"
             },
             dialog : {
                 link : {
                     title    : "Link",
                     url      : "Address",
                     urlTitle : "Title",
-                    urlEmpty : "Error: Please fill in the link address.",
-                    titleEmpty : "Error: Please fill in the link title."
+                    urlEmpty : "Error: Please fill in the link address."
                 },
-                anchor : {
-                    title    : "Anchor link",
+                referenceLink : {
+                    title    : "Reference link",
                     name     : "Name",
                     url      : "Address",
+                    urlId    : "ID",
                     urlTitle : "Title",
-                    nameEmpty: "Error: anchor name can't be empty.",
-                    titleEmpty : "Error: Please fill in anchor link title.",
-                    urlEmpty : "Error: Please fill in anchor link."
+                    nameEmpty: "Error: Reference name can't be empty.",
+                    idEmpty  : "Error: Please fill in reference link id.",
+                    urlEmpty : "Error: Please fill in reference link url address."
                 },
                 image : {
                     title    : "Image",
@@ -75,17 +75,23 @@
                     uploadFileEmpty  : "Error: upload pictures cannot be empty!",
                     formatNotAllowed : "Error: only allows to upload pictures file, upload allowed image file format:"
                 },
-                tabCodeBlock : {
+                preformattedText : {
                     title             : "Preformatted text / Codes", 
-                    codeEmptyAlert    : "Error: Please fill in the Preformatted text or content of the codes."
+                    emptyAlert        : "Error: Please fill in the Preformatted text or content of the codes."
                 },
                 codeBlock : {
-                    title             : "Code block",                    
+                    title             : "Code block",         
                     selectLabel       : "Languages: ",
                     selectDefaultText : "select a code language...",
                     otherLanguage     : "Other languages",
                     unselectedLanguageAlert : "Error: Please select the code language.",
                     codeEmptyAlert    : "Error: Please fill in the code content."
+                },
+                htmlEntities : {
+                    title : "HTML Entities"
+                },
+                help : {
+                    title : "Help"
                 }
             }
         };
