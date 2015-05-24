@@ -332,7 +332,7 @@ def import_blog():
             new_link.save()
 
         for media in medias:
-            new_media = Media.get_by_filename(media["filename"])
+            new_media = Media.get_by_fileid(media["fileid"])
             if new_media:
                 continue
             else:
@@ -340,6 +340,8 @@ def import_blog():
 
             for item in media:
                 new_media.__dict__[item] = media[item]
+
+            # Notice, media id should not be set to None
             new_media.media_id = None
             new_media.create_time = \
                 datetime.fromtimestamp(new_media.create_time)
