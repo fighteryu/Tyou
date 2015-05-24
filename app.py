@@ -59,7 +59,7 @@ def configure_before_handlers(app):
     def init_setup():
         session.permanent = True
         g.config = User.get_config() or app.config
-        g.sidebar = gen_sidebar(current_app.config)
+        g.sidebar = gen_sidebar(g.config)
 
 
 def configure_errorhandlers(app):
