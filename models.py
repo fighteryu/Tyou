@@ -357,6 +357,10 @@ class Link(db.Model):
     def get_by_id(cls, link_id):
         return cls.query.filter_by(link_id=int(link_id)).first()
 
+    @classmethod
+    def get_by_href(cls, href):
+        return cls.query.filter_by(href=href).first()
+
     def save(self):
         db.session.add(self)
         db.session.commit()
@@ -389,6 +393,10 @@ class Media(db.Model):
     @classmethod
     def get_by_id(cls, fileid):
         return cls.query.filter_by(fileid=fileid).first()
+
+    @classmethod
+    def get_by_filename(cls, filename):
+        return cls.query.filter_by(filename=filename).first()
 
     @classmethod
     def get_version(cls, filename):

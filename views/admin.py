@@ -72,8 +72,8 @@ def pageinplace(url=None):
 @adminor.route("/post/<int:post_id>", methods=["GET", "POST", "DELETE"])
 @admin_required
 def editpost(post_id=None):
-    '''show the edit page, update the post
-    '''
+    """show the edit page, update the post
+    """
     if request.method == "GET":
         post = Post()
         if post_id is not None:
@@ -87,7 +87,6 @@ def editpost(post_id=None):
     elif request.method == "POST":
         data = request.json
         now_time = datetime.now()
-        post = None
         if data['post_id'] is not None:
             post = Post.get_by_id(
                 post_id=int(data["post_id"]),
@@ -219,12 +218,29 @@ def commentmgnt(page=1):
 @admin_required
 def export():
     postlist = Post.query.all()
-    commentlist = Comment.query.all()
     linklist = Link.query.all()
     medialist = Media.query.all()
 
     ex_post = []
     for post in postlist:
+        # Back up all comments
+        ex_comment = []
+        commentlist = Comment.get_by_post_id(post.post_id)
+        for comment in commentlist:
+            ex_comment.append({
+                "comment_id": comment.comment_id,
+                "post_id": comment.post_id,
+                "url": comment.url,
+                "email": comment.email,
+                "nickname": comment.nickname,
+                "content": comment.content,
+                "to": comment.to,
+                "refid": comment.refid,
+                "create_time": int(comment.create_time.strftime("%s")),
+                "ip": comment.ip,
+                "website": comment.website
+            })
+
         ex_post.append({
             "post_id": post.post_id,
             "url": post.url,
@@ -239,24 +255,11 @@ def export():
             "allow_comment": post.allow_comment,
             "need_key": post.need_key,
             "is_original": post.is_original,
-            "num_lookup": post.num_lookup
-        })
-    ex_comment = []
-    for comment in commentlist:
-        ex_comment.append({
-            "comment_id": comment.comment_id,
-            "post_id": comment.post_id,
-            "url": comment.url,
-            "email": comment.email,
-            "nickname": comment.nickname,
-            "content": comment.content,
-            "to": comment.to,
-            "refid": comment.refid,
-            "create_time": int(comment.create_time.strftime("%s")),
-            "ip": comment.ip,
-            "website": comment.website
+            "num_lookup": post.num_lookup,
+            "commentlist": ex_comment
         })
 
+    # Backup all links
     ex_link = []
     for link in linklist:
         ex_link.append({
@@ -268,6 +271,7 @@ def export():
             "display": link.display,
         })
 
+    # Backup all media
     ex_media = []
     for media in medialist:
         ex_media.append({
@@ -284,7 +288,6 @@ def export():
         {
             "site": request.url_root,
             "links": ex_link,
-            "comments": ex_comment,
             "posts": ex_post
         },
         sort_keys=True,
@@ -294,7 +297,7 @@ def export():
     # compress data and send as zip
     from io import BytesIO
     import zipfile
-    filename = "export " + datetime.now().strftime("%Y-%m-%d %H:%M")
+    filename = g.config["BLOGNAME"] + datetime.now().strftime("%Y%m%d%H%M")
     memory_file = BytesIO()
     with zipfile.ZipFile(memory_file, 'w') as zf:
         zf.writestr(filename + ".json", data)
@@ -309,39 +312,49 @@ def import_blog():
 
     try:
         data = json.load(f.stream)
-        comments = data.pop("comments", [])
         links = data.pop("links", [])
         medias = data.pop("medias", [])
         posts = data.pop("posts", [])
 
-        for comment in comments:
-            new_comment = Comment()
-            for item in comment:
-                new_comment.__dict__[item] = comment[item]
-            new_comment.create_time = \
-                datetime.fromtimestamp(new_comment.create_time)
-            new_comment.save()
-
         for link in links:
-            new_link = Link()
+            new_link = Link.get_by_href(link["href"])
+            if new_link:
+                continue
+            else:
+                new_link = Link()
+
             for item in link:
                 new_link.__dict__[item] = link[item]
+            new_link.link_id = None
             new_link.create_time = \
                 datetime.fromtimestamp(new_link.create_time)
             new_link.save()
 
         for media in medias:
-            new_media = Media()
+            new_media = Media.get_by_filename(media["filename"])
+            if new_media:
+                continue
+            else:
+                new_media = Media()
+
             for item in media:
                 new_media.__dict__[item] = media[item]
+            new_media.media_id = None
             new_media.create_time = \
                 datetime.fromtimestamp(new_media.create_time)
             new_media.save()
 
         for post in posts:
-            new_post = Post()
+            # If posts exist, continue
+            new_post = Post.get_by_url(post["url"], public_only=False)
+            if new_post:
+                continue
+            else:
+                new_post = Post()
+
             for item in post:
                 new_post.__dict__[item] = post[item]
+            new_post.post_id = None
             new_post.create_time = \
                 datetime.fromtimestamp(new_post.create_time)
             new_post.update_time = \
@@ -352,6 +365,18 @@ def import_blog():
             new_post.tags = ""
             new_post.update_tags(newtags)
             new_post.save()
+
+            # Restore all posts
+            comments = post["commentlist"]
+            for comment in comments:
+                new_comment = Comment()
+                for item in comment:
+                    new_comment.__dict__[item] = comment[item]
+                new_comment.post_id = new_post.post_id
+                new_comment.comment_id = None
+                new_comment.create_time = \
+                    datetime.fromtimestamp(new_comment.create_time)
+                new_comment.save()
 
     except Exception as e:
         return str(e)
