@@ -2,8 +2,9 @@
 settings.py
 config.py
 test
-py
+py/
 .py/
+.idea/
 uploads
 .ropeproject
 .DS_Store
