@@ -21,7 +21,7 @@ adminor = Blueprint('admin', __name__, template_folder="../templates")
 @adminor.route('/postlist/<int:page>')
 @admin_required
 def adminpostlist(page=1):
-    perpage = g.config["PER_PAGE"]
+    perpage = g.config["ADMIN_ITEM_COUNT"]
     args = request.args
     kargs = {}
     if "is_original" in args and args["is_original"] == "true":
@@ -45,7 +45,7 @@ def adminpostlist(page=1):
         **kargs)
 
     pager = gen_pager(Post.count(**kargs),
-                      g.config["PER_PAGE"],
+                      g.config["ADMIN_ITEM_COUNT"],
                       page)
     return render_template('admin/postlist.html',
                            postlist=postlist,
@@ -201,8 +201,11 @@ def commentmgnt(page=1):
         per_page = g.config["ADMIN_ITEM_COUNT"]
         if 'post_id' in request.args:
             post_id = request.args['post_id']
-            commentlist = Comment.get_page(post_id=post_id, pagenumber=page)
-            pager = gen_pager(Comment.count(), per_page, page)
+            commentlist = Comment.get_page(
+                offset=per_page*(page-1),
+                limit=per_page,
+                post_id=post_id)
+            pager = gen_pager(Comment.count(post_id), per_page, page)
         else:
             commentlist = Comment.get_page(
                 offset=per_page*(page-1),
@@ -216,7 +219,7 @@ def commentmgnt(page=1):
 
 @adminor.route("/export", methods=["GET"])
 @admin_required
-def export():
+def export_blog():
     postlist = Post.query.all()
     linklist = Link.query.all()
     medialist = Media.query.all()

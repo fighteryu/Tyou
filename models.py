@@ -395,7 +395,7 @@ class Media(db.Model):
         return cls.query.filter_by(fileid=fileid).first()
 
     @classmethod
-    def get_by_file(cls, filename):
+    def get_by_fileid(cls, fileid):
         return cls.query.filter_by(fileid=fileid).first()
 
     @classmethod
