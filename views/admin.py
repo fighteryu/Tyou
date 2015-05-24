@@ -288,7 +288,8 @@ def export():
         {
             "site": request.url_root,
             "links": ex_link,
-            "posts": ex_post
+            "posts": ex_post,
+            "media": ex_media
         },
         sort_keys=True,
         indent=4,
