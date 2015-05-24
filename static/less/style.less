@@ -43,7 +43,7 @@
 body{
 	height:100%;
 	background-color: #eee;
-	font-family: "Open Sans","WenQuanYi Micro Hei",Consolas,Monaco,"Microsoft YaHei","微软雅黑";
+	font-family: "Helvetica Neue","Open Sans","Microsoft YaHei","微软雅黑","Helvetica Neue",Helvetica,Arial,sans-serif;
 	color:@basefont;
 	::selection { 
 		background: @basered;
@@ -68,10 +68,12 @@ body{
 			word-wrap: break-word;
 			strong{
 				font-size: 14px;
+				display:inline-block;
 				line-height: 20px;
 				font-weight: normal;
 				margin: -1px 0px 0px -16px;
 				padding: 3px 15px 4px 15px;
+				vertical-align: middle;
 				color: #fff;
 			}
 			&.announcement strong{
