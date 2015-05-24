@@ -312,7 +312,7 @@ class Comment(db.Model):
         if post_id is None:
             return cls.query.count()
         else:
-            return cls.query(cls.post_id == post_id).count()
+            return cls.query.filter_by(post_id=post_id).count()
 
     @classmethod
     def get_last_X(cls, count):

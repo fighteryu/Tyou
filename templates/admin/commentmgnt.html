@@ -42,7 +42,7 @@
 			{%endif%}
 			</td>
 			<td>
-				<a href="/page/{{comment.url}}">{{comment.url}}</a>
+				<a href="/admin/commentmgnt?post_id={{comment.post_id}}">{{comment.url}}</a>
 			</td>
 			<td>
 				{{comment.content | truncate(50,True) }}
