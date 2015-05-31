@@ -181,15 +181,15 @@ class Post(db.Model):
         return "," + tags + ","
 
     def update_tags(self, new_string):
-        """ Post.tags is a string in which multi tags are seperatedi by ",", we
+        """ Post.tags is a string in which multi tags are seperated by ",", we
         will seperate them and save to database. Use this method when you want
         to update or create a post
         Input:
             "abc,abc, abc,123"
         Output:
             ",abc,123,"
-            count for abc and 123 will increase by 1 ,We append comma before
-            and after "abc,123", so we can do teh follwoing mysql search
+            sum for abc and 123 will increase by 1 ,We append comma before
+            and after "abc,123", so we can do the follwoing mysql search
                 `select * from tag where name like '%,tagname,%'`
         """
         duptags = new_string.split(",")
@@ -252,6 +252,9 @@ class Tag(db.Model):
                 tag = Tag.get_one(item)
                 if tag:
                     tag.count += 1
+                    # items in uppercase and lowercase are treated as one tag.
+                    # update name to get the most recent version
+                    tag.name = item
                 else:
                     tag = Tag(name=item)
                     db.session.add(tag)
