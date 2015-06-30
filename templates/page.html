@@ -8,6 +8,7 @@
 {%block extrahead%}
 	<link href="/static/js/lib/syntaxhighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
 	<link href="/static/js/lib/syntaxhighlighter/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+	<link href="/static/js/lib/lightbox/css/lightbox.css" rel="stylesheet" type="text/css" />
 {%endblock extrahead%}
 {%block postbody%}
 <form>
@@ -111,11 +112,12 @@
 
 {%endblock postbody%}
 {%block  endscript%}
-<script src="/static/js/lib/syntaxhighlighter/scripts/shCore.js"></script>
-<script src="/static/js/lib/syntaxhighlighter/scripts/shAutoloader.js"></script>
+<script type="text/javascript" src="/static/js/lib/syntaxhighlighter/scripts/shCore.js"></script>
+<script type="text/javascript" src="/static/js/lib/syntaxhighlighter/scripts/shAutoloader.js"></script>
+<script type="text/javascript" src="/static/js/lib/lightbox/js/lightbox.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-	/*carrage return event */
+	/*carrage return event*/
 	$("#post_password").bind('keyup',function(e){
    		if(e.keyCode=='13'){
 			$("#decrypt").click();
@@ -123,6 +125,12 @@ $(document).ready(function(){
 	});
 	/*hightlight code*/
 	highlight();
+	/*light box function*/
+	$("#content img").each(function(){
+		var parent = '<a href="' + $(this).attr("src") + '" data-lightbox="roadtrip" data-title="'+ $(this).attr("alt") +'""></a>';
+ 		$(this).wrap(parent);
+		// $(this).html();
+	});
 
 	/*commen event*/
 	makecommenthtml=$("#comment-widget").html();
