@@ -1,7 +1,7 @@
 <VirtualHost ifconfiger.com:80>
     RewriteEngine On
     RewriteCond %{HTTPS} !=on
-    RewriteRule ^(.*)$ https://ifconfiger.com$1 [R=301,L]
+    RewriteRule ^(.*)$ https://ifconfiger.com$1 [R=302,L]
 </VirtualHost>
 
 <VirtualHost ifconfiger.com:443>

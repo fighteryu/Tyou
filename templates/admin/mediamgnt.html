@@ -64,8 +64,8 @@
 
 {%block  endscript%}
 <script src="/static/js/lib/jQuery-File-Upload/vendor/jquery.ui.widget.js"></script>
-<script type="text/javascript" src="/static/js/lib/jQuery-File-Upload/vendor/load-image.all.min.js"></script>
-<script type="text/javascript" src="/static/js/lib/jQuery-File-Upload/vendor/canvas-to-blob.min.js"></script>
+<script src="/static/js/lib/jQuery-File-Upload/vendor/load-image.all.min.js"></script>
+<script src="/static/js/lib/jQuery-File-Upload/vendor/canvas-to-blob.min.js"></script>
 <script src="/static/js/lib/jQuery-File-Upload/jquery.iframe-transport.js"></script>
 <script src="/static/js/lib/jQuery-File-Upload/jquery.fileupload.js"></script>
 <script src="/static/js/lib/jQuery-File-Upload/jquery.fileupload-process.js"></script>
@@ -165,8 +165,9 @@ $(function () {
         // Enable image resizing, except for Android and Opera,
         // which actually support image resizing, but fail to
         // send Blob objects via XHR requests:
-        disableImageResize: /Android(?!.*Chrome)|Opera/
-            .test(window.navigator.userAgent),
+        // disableImageResize: /Android(?!.*Chrome)|Opera/
+            // .test(window.navigator.userAgent),
+        disableImageResize:true,
         previewMaxWidth: 100,
         previewMaxHeight: 100,
         previewCrop: true
