@@ -7,6 +7,6 @@
 {{list_post_simple(eachpost) | safe}}
 </div>
 {%endfor%}
-{%from 'part/pager' import pager_funct%}
-{{pager_funct('/',pager,prefix="index/")|safe}}
+{%from 'part/pager2' import pager_funct2%}
+{{pager_funct2("index?page=",'',pager)|safe}}
 {%endblock postbody%}

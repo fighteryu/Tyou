@@ -18,9 +18,10 @@ from other import frontend
 
 
 @frontend.route('/')
-@frontend.route("/index/<int:page>")
-def index(page=1):
-    offset = g.config["PER_PAGE"]*(page-1)
+@frontend.route("/index")
+def index():
+    page = int(request.args.get("page", 1))
+    offset = g.config["PER_PAGE"]*(page - 1)
     postlist = Post.get_page(offset, g.config["PER_PAGE"], allow_visit=True)
     pager = gen_pager(
         Post.count(allow_visit=True),
