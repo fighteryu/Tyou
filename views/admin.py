@@ -54,18 +54,24 @@ def adminpostlist(page=1):
                            parameter=request.query_string)
 
 
-@adminor.route("/post/<url>/inplace")
+@adminor.route("/post/inplace")
 @admin_required
-def pageinplace(url=None):
+def pageinplace():
     """Check if a url is in place
     """
+    url = request.args["url"]
+    post_id = request.args["post_id"]
     post = Post.get_by_url(url=url)
-    if post:
+
+    # same post or the post doesn't exist
+    if (post and post.post_id == post_id) or (not post):
+        print False
+        return jsonify(success=True,
+                       in_place=False)
+    else:
+        print True
         return jsonify(success=True,
                        in_place=True)
-    else:
-        return jsonify(success=True,
-                       in_plcae=False)
 
 
 @adminor.route("/post", methods=["GET", "POST", "DELETE"])

@@ -1,5 +1,5 @@
 {%extends 'part/adminbase'%}
-{%block title%}Admin Blog--新文章{%endblock title%}
+{%block title%}Admin Blog--编辑文章{%endblock title%}
 {%block extraadminhead%}
 <script type="text/javascript" src="/static/js/lib/ckeditor/ckeditor.js"></script>
 {%endblock extraadminhead%}
@@ -137,21 +137,34 @@ function initClick(){
 	});
 	//check is the url is in use
 	$("#url").blur(function(){
-		if($("#url").val().trim()!="" && $("#post_id").val()==""){
-			$.ajax({
-				type :"get",
-				url:"/admin/post/"+$("#url").val().trim()+"/inplace",
-				success:function(data){
-					if(data.in_place==true){
-						$("#url").parent().addClass("has-error");
-					}
-					else{
-						$("#url").parent().removeClass("has-error");
-					}
-				}
-
-			});
+		var url = $("#url").val().trim();
+		// url should not be empty;
+		if(url==""){
+			$("#url").parent().addClass("has-error");
+			return;
 		}
+
+		// ?,/,& are not allowed in url
+		if(url.indexOf("?")>=0 || url.indexOf("/")>=0 || url.indexOf("&")>=0){
+			$("#url").parent().addClass("has-error");
+			return;
+		}
+
+		// url should be unique
+		$.ajax({
+			ansync:false,
+			type :"get",
+			url:"/admin/post/inplace?url="+$("#url").val().trim()+"&"+"post_id="+$("#post_id").val(),
+			success:function(data){
+				if(data.in_place==true){
+					$("#url").parent().addClass("has-error");
+					return;
+				}
+			}
+
+		});
+		$("#url").parent().removeClass("has-error");
+
 	});
 	$(function () {
 		$(document).bind('keydown', function (event) {
