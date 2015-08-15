@@ -176,6 +176,11 @@ def setting():
                 except Exception:
                     new_config[item] = request.form[item]
 
+        # blog url ends with slash
+        new_config["BLOGURL"] = request.form.get("BLOGURL", "")
+        if not new_config["BLOGURL"].endswith("/"):
+            new_config["BLOGURL"] += "/"
+
         user = User.get_one()
         user.config = json.dumps(new_config)
         user.save()
