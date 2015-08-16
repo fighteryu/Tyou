@@ -60,16 +60,14 @@ def pageinplace():
     """Check if a url is in place
     """
     url = request.args["url"]
-    post_id = request.args["post_id"]
+    post_id = int(request.args["post_id"])
     post = Post.get_by_url(url=url)
 
     # same post or the post doesn't exist
     if (post and post.post_id == post_id) or (not post):
-        print False
         return jsonify(success=True,
                        in_place=False)
     else:
-        print True
         return jsonify(success=True,
                        in_place=True)
 
