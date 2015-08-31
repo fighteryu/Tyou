@@ -9,8 +9,7 @@ reload(sys)
 sys.setdefaultencoding("utf8")
 
 import os
-from flask import Flask, g, request, jsonify, render_template, session,\
-    current_app
+from flask import Flask, g, request, jsonify, render_template, session
 import config
 from models import db, gen_sidebar, User
 from views import MODULES
@@ -76,6 +75,31 @@ def configure_errorhandlers(app):
         if request.is_xhr:
             return jsonify(error='Sorry, an error has occurred')
         return render_template("error/500.html", error=error), 500
+
+
+def register_manage_command(app):
+    """functions for commandline useage
+    """
+    def backup_blog():
+        ctx = app.test_request_context()
+        ctx.push()
+        app.preprocess_request()
+
+        # export and write to uploads folder
+        from config import UPLOAD_FOLDER
+        from models import export_all
+        data = export_all()
+        import zipfile
+        import datetime
+        z = zipfile.ZipFile(os.path.join(UPLOAD_FOLDER, "Blogbackup.zip"),
+                            'w', zipfile.ZIP_DEFLATED)
+        z.writestr(datetime.datetime.now().strftime("%Y%m%d%H%M.json"), data)
+        z.close()
+
+        ctx.pop()
+
+    app.cli_backup_blog = backup_blog
+    return app
 
 
 app = createapp()

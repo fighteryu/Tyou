@@ -460,3 +460,83 @@ def gen_sidebar(config):
     rr["announce"] = announce
     rr["announce_length"] = config["ANNOUNCE_LENGTH"]
     return rr
+
+
+def export_all():
+    """export all blog data"""
+    postlist = Post.query.all()
+    linklist = Link.query.all()
+    medialist = Media.query.all()
+
+    ex_post = []
+    for post in postlist:
+        # Back up all comments
+        ex_comment = []
+        commentlist = Comment.get_by_post_id(post.post_id)
+        for comment in commentlist:
+            ex_comment.append({
+                "comment_id": comment.comment_id,
+                "post_id": comment.post_id,
+                "url": comment.url,
+                "email": comment.email,
+                "nickname": comment.nickname,
+                "content": comment.content,
+                "to": comment.to,
+                "refid": comment.refid,
+                "create_time": int(comment.create_time.strftime("%s")),
+                "ip": comment.ip,
+                "website": comment.website
+            })
+
+        ex_post.append({
+            "post_id": post.post_id,
+            "url": post.url,
+            "title": post.title,
+            "content": post.content,
+            "keywords": post.keywords,
+            "metacontent": post.metacontent,
+            "create_time": int(post.create_time.strftime("%s")),
+            "update_time": int(post.update_time.strftime("%s")),
+            "tags": post.tags,
+            "allow_visit": post.allow_visit,
+            "allow_comment": post.allow_comment,
+            "need_key": post.need_key,
+            "is_original": post.is_original,
+            "num_lookup": post.num_lookup,
+            "commentlist": ex_comment
+        })
+
+    # Backup all links
+    ex_link = []
+    for link in linklist:
+        ex_link.append({
+            "link_id": link.link_id,
+            "name": link.name,
+            "href": link.href,
+            "description": link.description,
+            "create_time": int(link.create_time.strftime("%s")),
+            "display": link.display,
+        })
+
+    # Backup all media
+    ex_media = []
+    for media in medialist:
+        ex_media.append({
+            "fileid": media.fileid,
+            "filename": media.filename,
+            "version": media.version,
+            "content_type": media.content_type,
+            "size": media.size,
+            "create_time": int(media.create_time.strftime("%s")),
+            "display": media.display
+        })
+
+    return json.dumps(
+        {
+            "links": ex_link,
+            "posts": ex_post,
+            "medias": ex_media
+        },
+        sort_keys=True,
+        indent=4,
+        separators=(',', ': '))

@@ -142,10 +142,18 @@ def create_user(username, password):
 def delete_user(username):
     conn = db.cursor()
     conn.execute(
-        "delete from user where username='{username}';"\
+        "delete from user where username='{username}';"
         .format(username=username))
     db.commit()
     print("delete user Done")
+
+
+def backup_blog():
+    """backup blog to uploads folder"""
+    from app import app, register_manage_command
+    app = register_manage_command(app)
+    # open a context so as to invoke database model
+    app.cli_backup_blog()
 
 if __name__ == "__main__":
     args = sys.argv
@@ -158,8 +166,8 @@ if __name__ == "__main__":
         username = args[2]
         password = args[3]
         create_user(username, password)
-    elif len(args) == 3 and args[1] == "deleteuser":
-
+    elif len(args) == 2 and args[1] == "backup":
+        backup_blog()
         pass
     else:
         print("""
@@ -168,4 +176,5 @@ if __name__ == "__main__":
             manage.py createuser <username> <password>
             manage.py deleteuser <username>
             manage.py generatekey
+            manage.py backup
               """)

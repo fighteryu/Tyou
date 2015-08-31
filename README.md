@@ -12,3 +12,4 @@ To deploy this blog:
 4. run `python manage.py createuser <username> <password>` to creaet a user
 5. try `python app.py`, and open http://127.0.0.1:5000
 6. deploy this app to web servers like apache or ngnix
+7. run `python manage.py backup` as cron job to backup your blog data to `uploads` folder 
