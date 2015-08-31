@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # coding:utf-8
 
-activate_this = '/var/www/Tyou/.py/bin/activate_this.py'
-execfile(activate_this, dict(__file__=activate_this))
+from config import update_path
+update_path()
 import sys
 import logging
 logging.basicConfig(stream=sys.stderr)

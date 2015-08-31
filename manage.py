@@ -25,6 +25,8 @@ import base64
 from optparse import OptionParser
 from random import choice
 from string import Template
+from config import update_path
+update_path()
 
 import warnings
 warnings.filterwarnings('ignore')
