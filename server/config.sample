@@ -13,23 +13,13 @@ password = "tyou"
 database = "tyou"
 port = 3306
 mysqlhost = "localhost"
-virtualenv_path = "<path to /bin/activate_this.py>"
-
-########
-# config based on calculations
 SQLALCHEMY_DATABASE_URI = "mysql://"+username+":"+password+"@"+mysqlhost\
     + ":"+str(port)+'/'+database
+
 try:
     from secret_keys import SESSION_KEY as SECRET_KEY
 except Exception:
     pass
-
-
-def update_path():
-    """update python virtual environment"""
-    execfile(virtualenv_path, dict(__file__=virtualenv_path))
-
-
 # Set upload folder to current_folder /uploads
 import os
 work_dir = os.path.dirname(os.path.realpath(__file__))
@@ -48,4 +38,4 @@ PER_PAGE = 15
 ANNOUNCE_LENGTH = 200
 ADMIN_ITEM_COUNT = 20
 RSS_ITEM_COUNT = 20
-POST_PASSWORD = "change me!"
+POST_PASSWORD = "changeme!"

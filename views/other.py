@@ -29,14 +29,14 @@ def recent_feed():
         if not post.need_key:
             feed.add(post.title, unicode(post.content[0:300]+'......'),
                      content_type='html',
-                     author="博主",
+                     author=u"博主",
                      url=make_external('page/'+urllib.quote(post.url)),
                      updated=post.update_time,
                      published=post.create_time)
         else:
-            feed.add(post.title, "文章被加密，输入密码查看",
+            feed.add(post.title, u"文章被加密，输入密码查看",
                      content_type='html',
-                     author="博主",
+                     author=u"博主",
                      url=make_external('page/'+urllib.quote(post.url)),
                      updated=post.update_time,
                      published=post.create_time)

@@ -1,6 +1,10 @@
-*.swp
+#ignore server specified config files
+app.wsgi
+#ignore configuration files
 settings.py
 config.py
+
+*.swp
 test
 py/
 .py/

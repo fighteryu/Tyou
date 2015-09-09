@@ -5,8 +5,10 @@
 
 # File Name: app.py
 import sys
+for i in sys.path:
+    print i
 reload(sys)
-sys.setdefaultencoding("utf8")
+# sys.setdefaultencoding("utf8")
 
 import os
 from flask import Flask, g, request, jsonify, render_template, session
