@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<svg width="500" height="400" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="402" width="502" y="-1" x="-1"/>
+  <g display="none" overflow="visible" y="0" x="0" height="100%" width="100%" id="canvasGrid">
+   <rect fill="url(#gridpattern)" stroke-width="0" y="0" x="0" height="100%" width="100%"/>
+  </g>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <text style="cursor: move;" transform="matrix(1.1296014785766602,0,0,1.0735293626785278,-18.597812175750732,-2.4632336497306824) " xml:space="preserve" text-anchor="left" font-family="Helvetica, Arial, sans-serif" font-size="140" id="svg_1" y="139.089041" x="105.433478" stroke-width="0" fill="#999999">500</text>
+  <text xml:space="preserve" text-anchor="left" font-family="Helvetica, Arial, sans-serif" font-size="30" id="svg_2" y="283.5" x="15.5" stroke-width="0" fill="#7f7f7f">Internal server error</text>
+  <text style="cursor: move;" xml:space="preserve" text-anchor="left" font-family="Helvetica, Arial, sans-serif" font-size="30" id="svg_3" y="344.5" x="217.5" stroke-width="0" fill="#7f7f7f">Will be back soon !</text>
+ </g>
+</svg>
