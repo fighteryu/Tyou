@@ -4,12 +4,6 @@
 # Created Time : 2014/12/14 22:37
 
 # File Name: app.py
-import sys
-for i in sys.path:
-    print i
-reload(sys)
-# sys.setdefaultencoding("utf8")
-
 import os
 from flask import Flask, g, request, jsonify, render_template, session
 import config
