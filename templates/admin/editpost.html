@@ -17,48 +17,56 @@
 			<span class="input-group-addon">标签</span>
 			<input type="text" name="tags" id="tags" value="{{",".join(post.get_tags())}}" class="form-control" placeholder="逗号隔开">
 		</div><div class="input-group">
-			<span class="input-group-addon">keywords</span>
+			<span class="input-group-addon">关键词</span>
 			<input type="text" name="keywords" id="keywords" value="{{post.keywords}}" class="form-control" placeholder="Meta keywords for search engine,separated by comma">
 		</div><div class="input-group">
-			<span class="input-group-addon">content</span>
+			<span class="input-group-addon">meta content</span>
 			<input type="text" name="metacontent" id="metacontent" value="{{post.metacontent}}" class="form-control" placeholder="Meta content for search engine">
-		</div><div class="btn-group">
-			<button type="button" class="btn btn-primary menu" id="allow_comment">{%if post.allow_comment==True%}allow comment{%else%}deny comment{%endif%}</button>
-			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-				<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a class="dropmenu" href="#">allow comment</a></li>
-				<li><a class="dropmenu" href="#">deny comment</a></li>	
-			</ul>
-		</div><div class="btn-group">
-			<button type="button" class="btn btn-primary menu" id="need_key">{%if post.need_key==True%}need key{%else%}deny key{%endif%}</button>
-			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-				<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a class="dropmenu" href="#">need key</a></li>
-				<li><a class="dropmenu" href="#">deny key</a></li>	
-			</ul>
-		</div><div class="btn-group">
-			<button type="button" class="btn btn-primary menu" id="allow_visit">{%if post.allow_visit==True%}allow visit{%else%}deny visit{%endif%}</button>
-			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-				<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a class="dropmenu" href="#">allow visit</a></li>
-				<li><a class="dropmenu" href="#">deny visit</a></li>	
-			</ul>
-		</div><div class="btn-group">
-			<button type="button" class="btn btn-primary menu" id="is_original">{%if post.is_original==True%}is original{%else%}not original{%endif%}</button>
-			<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-				<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu">
-				<li><a class="dropmenu" href="#">is original</a></li>
-				<li><a class="dropmenu" href="#">not original</a></li>	
-			</ul>
-		</div><button class="btn btn-primary" id="submit">Submit</button><button class="btn btn-primary" id="checkpost">预览</button><button class="btn btn-primary" onclick="window.open('/admin/mediamgnt');return false" >文件管理</button>
+		</div>
+		<div class="btn-group">
+			<div class="btn-group">
+				<button type="button" class="btn btn-primary menu" mark="{%if post.allow_visit==True%}allow_visit{%else%}deny_visit{%endif%}" id="allow_visit">{%if post.allow_visit==True%}发布{%else%}隐藏{%endif%}</button>
+				<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<li><a class="dropmenu" mark="allow_visit" href="#">发布</a></li>
+					<li><a class="dropmenu" mark="deny_visit" href="#">隐藏</a></li>	
+				</ul>
+			</div>
+			<div class="btn-group">
+				<button type="button" class="btn btn-primary menu" mark="{%if post.is_original==True%}is_original{%else%}not_original{%endif%}" id="is_original">{%if post.is_original==True%}是原创{%else%}非原创{%endif%}</button>
+				<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<li><a class="dropmenu" mark="is_original" href="#">是原创</a></li>
+					<li><a class="dropmenu" mark="not_original" href="#">非原创</a></li>	
+				</ul>
+			</div>
+			<div class="btn-group">
+				<button type="button" class="btn btn-primary menu" id="allow_comment" mark="{%if post.allow_comment==True%}allow_comment{%else%}deny_comment{%endif%}">{%if post.allow_comment==True%}允许评论{%else%}禁止评论{%endif%}</button>
+				<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<li><a class="dropmenu" mark="allow_comment" href="#">允许评论</a></li>
+					<li><a class="dropmenu" mark="deny_comment" href="#">禁止评论</a></li>	
+				</ul>
+			</div>
+			<div class="btn-group">
+				<button type="button" class="btn btn-primary menu" mark="{%if post.need_key==True%}need_key{%else%}deny_key{%endif%}" id="need_key">{%if post.need_key==True%}密码访问{%else%}公开访问{%endif%}</button>
+				<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+					<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu">
+					<li><a class="dropmenu" mark="deny_key" href="#">公开访问</a></li>
+					<li><a class="dropmenu" mark="need_key" href="#">密码访问</a></li>	
+				</ul>
+			</div>
+		</div>
+
+		<button class="btn btn-primary" id="submit">提交</button><button class="btn btn-primary" id="checkpost">预览</button><button class="btn btn-primary" onclick="window.open('/admin/mediamgnt');return false" >文件管理</button>
 	</form>
 	<textarea id="editor" >{{post.content}}</textarea>
 </div>
@@ -95,10 +103,10 @@ function submitEvent(){
 	data.content=content;
 	data.keywords=$("#keywords").val();
 	data.metacontent=$("#metacontent").val();
-	if($("#allow_comment").text()=="allow comment"){data.allow_comment=true}else{data.allow_comment=false};
-	if($("#allow_visit").text()=="allow visit"){data.allow_visit=true}else{data.allow_visit=false};
-	if($("#is_original").text()=="is original"){data.is_original=true}else{data.is_original=false};
-	if($("#need_key").text()=="need key"){data.need_key=true}else{data.need_key=false};
+	if($("#allow_comment").attr("mark")=="allow_comment"){data.allow_comment=true}else{data.allow_comment=false};
+	if($("#allow_visit").attr("mark")=="allow_visit"){data.allow_visit=true}else{data.allow_visit=false};
+	if($("#is_original").attr("mark")=="is_original"){data.is_original=true}else{data.is_original=false};
+	if($("#need_key").attr("mark")=="need_key"){data.need_key=true}else{data.need_key=false};
 
 	// data.allow_comment=$("#allow_comment").is(":checked");
 	// data.allow_visit=$("#allow_visit").is(":checked");
@@ -133,7 +141,9 @@ function turnToPage(){
 function initClick(){
 	$(".dropmenu").click(function(){
 		var choosecontent=$(this).text();
-		var obj=$(this).parent().parent().parent().children(".menu").text(choosecontent);
+		var mark = $(this).attr("mark");
+		$(this).parent().parent().parent().children(".menu").text(choosecontent);
+		$(this).parent().parent().parent().children(".menu").attr("mark", mark);
 	});
 	//check is the url is in use
 	$("#url").blur(function(){
