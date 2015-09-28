@@ -15,12 +15,12 @@ To deploy this blog:
 7. create `upload` folder in project root folde, making sure webserver is able to write. 
 8. run `python manage.py backup` as cron job to backup your blog data to `uploads` folder 
 
-To deploy app to apache
+To deploy app on apache
 ======
 0. cp server/apache/tyou.conf to /etc/apache2/sites-available, enable this site
 1. cp server/apache/tyou.wsgi to prj/app.wsgi, make sure wsgi file coudl be found by apache
 
-To deploy app to nginx
+To deploy app on nginx
 ======
 0. install nginx,uwsgi
 1. cp server/nginx/tyou_service.conf to /etc/init/, make sure uwsgi is running in the backend
