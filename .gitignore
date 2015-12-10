@@ -8,6 +8,7 @@ config.py
 test
 py/
 .py/
+.py3/
 .idea/
 uploads
 .ropeproject
