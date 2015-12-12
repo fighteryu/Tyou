@@ -31,7 +31,7 @@ def dosearch(page=1):
             )
             count = Post.tag_search_count(tagname)
 
-        pager = gen_pager(count, g.config["PER_PAGE"], page)
+        pager = gen_pager(page, count, g.config["PER_PAGE"], request.url)
         return render_template(
             "search.html",
             searchtype="tagsearch",
@@ -56,7 +56,7 @@ def dosearch(page=1):
             )
             count = Post.text_search_count(words=words)
 
-        pager = gen_pager(count, g.config["PER_PAGE"], page)
+        pager = gen_pager(page, count, g.config["PER_PAGE"], request.url)
         return render_template(
             'search.html',
             searchtype="textsearch",

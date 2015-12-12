@@ -1,10 +1,10 @@
-{%extends "part/adminbase"%}
-{%block title%}Admin Blog--文件{%endblock title%}
-{%block extraadminhead%}
+{% extends "part/adminbase" %}
+{% block title %}Admin Blog--文件{% endblock title %}
+{% block extraadminhead %}
 <link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload-ui.css"/>
 <link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload.css"/>
-{%endblock extraadminhead%}
-{%block admincontent%}
+{% endblock extraadminhead %}
+{% block admincontent %}
 <span class="btn btn-success fileinput-button">
         <i class="glyphicon glyphicon-plus"></i>
         <span>Add files...</span>
@@ -31,7 +31,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{%for media in medialist%}
+		{% for media in medialist %}
 		<tr>
 			<th>
 				<input class="page" type="checkbox" value="on" filename="{{media.filename}}" fileid="{{media.fileid}}">
@@ -44,25 +44,25 @@
 			</td>
 			<td>
 				<div class="filesize">
-					{{media.size}}				
+					{{ media.size }}				
 				</div>
 			</td>
-			<td>{{media.version}}</td>
-			{%if media.display%}
+			<td>{{ media.version }}</td>
+			{% if media.display %}
 			<td>允许</td>
-			{%else%}
+			{% else %}
 			<td>不允许</td>
-			{%endif%}
+			{% endif %}
 		</tr>
-		{%endfor%}				
+		{% endfor %}				
 	</tbody>
 </table>
 
-{%from 'part/pager' import pager_funct%}
-{{pager_funct('/admin/mediamgnt',pager)|safe}}
-{%endblock admincontent%}
+{% from 'part/pager3' import pager_funct %}
+{{ pager_funct(pager)|safe }}
+{% endblock admincontent %}
 
-{%block  endscript%}
+{% block  endscript %}
 <script src="/static/js/lib/jQuery-File-Upload/vendor/jquery.ui.widget.js"></script>
 <script src="/static/js/lib/jQuery-File-Upload/vendor/load-image.all.min.js"></script>
 <script src="/static/js/lib/jQuery-File-Upload/vendor/canvas-to-blob.min.js"></script>
@@ -236,4 +236,4 @@ $(function () {
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
 });
 </script>
-{%endblock  endscript%}
+{% endblock  endscript %}

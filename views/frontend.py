@@ -5,16 +5,16 @@
     ~~~~~~~~~~~~~
 
 """
-
 import json
-import urllib
 from datetime import datetime
+
 from flask import request, jsonify, g, abort, render_template,\
     flash, redirect, url_for, session
+
 from models import Post, Comment, User
 from helpers import gen_pager
-
-from other import frontend
+from .other import frontend
+from compat import unquote
 
 
 @frontend.route('/')
@@ -23,10 +23,8 @@ def index():
     page = int(request.args.get("page", 1))
     offset = g.config["PER_PAGE"]*(page - 1)
     postlist = Post.get_page(offset, g.config["PER_PAGE"], allow_visit=True)
-    pager = gen_pager(
-        Post.count(allow_visit=True),
-        g.config["PER_PAGE"],
-        page)
+    pager = gen_pager(page, Post.count(allow_visit=True), g.config["PER_PAGE"],
+                      request.url)
     if postlist or page == 1:
         return render_template(
             "index.html",
@@ -114,7 +112,7 @@ def comment():
             url=post.url,
             email=email,
             nickname=nickname,
-            content=urllib.unquote(content),
+            content=unquote(content),
             to=to,
             refid=refid,
             create_time=datetime.now(),

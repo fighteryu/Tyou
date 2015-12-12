@@ -44,10 +44,10 @@ def mediamgnt(filename=None):
             filesize = os.stat(filepath).st_size
 
             now = datetime.now()
+            hashstr = local_filename + now.strftime("%Y-%m-%d %H:%M:%S")
+            hashstr = hashstr.encode("utf8")
             media = Media(
-                fileid=hashlib.sha256(
-                    local_filename+now.strftime("%Y-%m-%d %H:%M:%S")
-                    ).hexdigest(),
+                fileid=hashlib.sha256(hashstr).hexdigest(),
                 filename=filename,
                 version=Media.get_version(filename),
                 content_type=f.content_type,

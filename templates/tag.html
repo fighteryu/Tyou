@@ -1,49 +1,49 @@
-{%extends 'part/base'%}
-{%from "part/post_item" import list_post%}
-{%block title%}标签搜索--{{tagname}}{%endblock title%}
+{% extends 'part/base' %}
+{% from "part/post_item" import list_post %}
+{% block title %}标签搜索--{{ tagname }}{% endblock title %}
 
-{%block postbody%}
+{% block postbody %}
 <div class="searchform" style="">
-		<input type="text" id="tagname" placeholder="标签搜索" value="{{tagname}}">
+		<input type="text" id="tagname" placeholder="标签搜索" value="{{ tagname }}">
 		<input type="button" id="tagsearchbutton" name="searchbutton" class="btn btn-primary" value="标签搜索"/>
 </div>
-{%if postlist%}
-{%for eachpost in postlist%}
+{% if postlist %}
+{% for eachpost in postlist %}
 <div class="row outline widget">
 <div class="col-md-3">
 	<div class="calendar">
-		<div class="day">{{eachpost.create_time.strftime("%d")}}</div>
+		<div class="day">{{ eachpost.create_time.strftime("%d") }}</div>
 		<div class="month-year">
-			<div class="year">{{eachpost.create_time.strftime("%Y")}}</div>
-			<div class="month">{{eachpost.create_time.strftime("%B")}}</div>
+			<div class="year">{{ eachpost.create_time.strftime("%Y") }}</div>
+			<div class="month">{{ eachpost.create_time.strftime("%B") }}</div>
 		</div>
 	</div>
 	<div class="tagcloud clearfix">
-		{%for tag in eachpost.tags%}
+		{% for tag in eachpost.tags %}
 		<div class="tag">
-		<a href="/tag/?tagname={{tag|urlencode}}">
-			{{tag}}
+		<a href="/tag/?tagname={{ tag|urlencode }}">
+			{{ tag }}
 		</a>
 		</div>			
-		{%endfor%}
+		{% endfor %}
 	</div>
 </div>
 <div class="col-md-9">
-	{{list_post(eachpost)|safe}}
+	{{ list_post(eachpost)|safe }}
 </div>
 </div>
-{%endfor%}
-{%else%}
+{% endfor %}
+{% else %}
 <div class="container" style="background-image: url('/static/img/not_found.png');background-position: 50% 50%, 50% 50%;background-repeat: no-repeat;margin: 20px 0px 0px;min-height: 450px;">
 </div>
-{%endif%}
-{%from 'part/pager' import pager_funct%}
-{{pager_funct('/tag',pager,param)|safe}}
-{%endblock postbody%}
+{% endif %}
+{% from 'part/pager3' import pager_funct %}
+{{ pager_funct(pager)|safe }}
+{% endblock postbody %}
 
 
 
-{%block endscript%}
+{% block endscript %}
 <script type="text/javascript">
 $(document).ready(function(){
 	$("#tagname").bind('keyup',function(e){
@@ -61,4 +61,4 @@ $(document).ready(function(){
 	});
 });
 </script>
-{%endblock endscript%}
+{% endblock endscript %}

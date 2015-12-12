@@ -6,9 +6,11 @@
 # File Name: app.py
 import os
 from flask import Flask, g, request, jsonify, render_template, session
+
 import config
 from models import db, gen_sidebar, User
 from views import MODULES
+from compat import quote
 
 
 def createapp():
@@ -27,7 +29,7 @@ def configure_jinja_filter(app):
 
     @app.template_filter('urlencode')
     def urlencode(uri, **query):
-        return urllib.quote(uri.encode('utf-8'))
+        return quote(uri.encode('utf-8'))
     app.jinja_env.globals['urlencode'] = urlencode
 
 
@@ -37,7 +39,13 @@ def configure_modules(app):
 
 
 def configure_db(app):
-    db.init_app(app)
+    @app.before_first_request
+    def create_database():
+        db.create_all()
+
+    @app.teardown_appcontext
+    def shutdown_sesion(exception=None):
+        db.session.remove()
 
 
 def configure_before_handlers(app):

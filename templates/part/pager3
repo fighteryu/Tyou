@@ -1,0 +1,74 @@
+{% macro pager_funct(pager) -%}
+
+{# pagination bar will be like 
+header ... bar<current>bar ...footer
+#}
+{% set header = 2 %}
+{% set footer = 2 %}
+{% set bar = 1 %}
+{% set pagecount = pager.total_page %}
+{% set pageindex = pager.current %}
+
+
+
+<ul class="pagination">
+  <li><a href="#">&laquo;</a></li>
+  {#append header to the pagination#}
+  {% for index in range(1, header + 1) %}
+    {% if index < pageindex - bar %}
+      <li><a href="{{ pager.baseurl }}{{ pager.seperator }}={{ index }}">{{ index }}</a></li>
+    {% endif %}
+  {% endfor %}
+ 
+  {#append ... to pagination#}
+  {% if pageindex > header + bar + 1 %}
+  <li><span>....</span></li>
+  {% endif %}
+   
+  {#append bar before pageindex#}
+  {% for index in range(pageindex - bar, pageindex) %}
+    {% if index>=1 %}
+    <li><a href="{{ pager.baseurl }}{{ pager.seperator }}={{ index }}">{{ index }}</a></li>
+    {% endif %}
+  {% endfor %}
+ 
+  {#item for pageindex#}
+  <li class="active"><span>{{ pageindex }}</span></li>
+ 
+  {#append two more items right after pageindex#}
+  {% for index in range(pageindex + 1,pageindex + bar + 1)%}
+    {% if index <= pagecount %}
+    <li><a href="{{ pager.baseurl }}{{ pager.seperator }}={{ index }}">{{ index }}</a></li>
+    {% endif %}
+  {% endfor %}
+ 
+  {#append ... to pagination#}
+  {%if pageindex < pagecount - footer - bar %}
+  <li><span>....</span></li>
+  {% endif %}
+   
+  {#append footer to the pagination#}
+  {% for index in range(pagecount - footer + 1,pagecount + 1) %}
+    {% if index > pageindex + bar %}
+      <li><a href="{{ pager.baseurl }}{{ pager.seperator }}={{ index }}">{{index}}</a></li>
+    {% endif %}
+  {% endfor %}
+  <li><a href="#">&raquo;</a></li>
+  <li><span>Go to</span></li>
+  <li><input type="text" style="width:3em;text-align:center;position:relative;float:left;padding:6px 12px;border:1px solid #ccc;height:34px;margin-left:-1px" id="goto_pagination" style="inline-block"/></li><li><span>Page</span></li>
+</ul>
+<script type="text/javascript">
+    $("#goto_pagination").keypress(function(event){
+        /*return*/
+        if(event.which == 13){
+            var re_num = /^\s*[1-9]\d*\s*$/;
+            if(re_num.test($(this).val())){
+                location.href="{{prefix}}"+$(this).val().trim()+"{{suffix}}";
+            }
+            else{
+                $(this).val("null");
+            }
+        }
+    });
+</script>
+{%- endmacro %}

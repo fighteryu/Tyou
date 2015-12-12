@@ -1,7 +1,7 @@
-{%set pagerurl="/admin/commentmgnt"%}
-{%extends "part/adminbase"%}
-{%block title%}Admin Blog--评论{%endblock title%}
-{%block admincontent%}
+{% set pagerurl="/admin/commentmgnt" %}
+{% extends "part/adminbase" %}
+{% block title %}Admin Blog--评论{% endblock title %}
+{% block admincontent %}
 <table class="widetable table table-condensed table-striped table-bordered table-hover">
 	<thead>
 		<tr>
@@ -17,46 +17,45 @@
 		</tr>
 	</thead>
 	<tbody>
-		{%for comment in commentlist%}
+		{% for comment in commentlist %}
 		<tr>
 			<td>
-				<input class="page" type="checkbox" value="on" name="{{comment.comment_id}}">
+				<input class="page" type="checkbox" value="on" name="{{ comment.comment_id }}">
 			</td>
 			<td>
-				<a href="mailto:{{comment.email}}">{{comment.nickname}}</a>
+				<a href="mailto:{{ comment.email }}">{{ comment.nickname }}</a>
 			</td>
 			<td>
-				{{comment.ip}} 
+				{{ comment.ip }} 
 			</td>
 			<td>
-				<div class="time">{{comment.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
+				<div class="time">{{ comment.create_time.strftime("%Y-%m-%d %H:%M") }}</div>
 			</td>
 			<td>
-			{%if comment.website%}
+			{% if comment.website %}
 				<a href="http://{{comment.website}}">
 					<div class="vers">
 						<span class="glyphicon glyphicon-globe"></span>
 					</div>
 				</a>
-			{%else%}
-			{%endif%}
+			{% endif %}
 			</td>
 			<td>
 				<a href="/admin/commentmgnt?post_id={{comment.post_id}}">{{comment.url}}</a>
 			</td>
 			<td>
-				{{comment.content | truncate(50,True) }}
+				{{ comment.content | truncate(50,True) }}
 			</td>
 		</tr>
-		{%endfor%}				
+		{% endfor %}				
 	</tbody>
 </table>
-{%from 'part/pager' import pager_funct%}
-{{pager_funct('/admin/commentmgnt',pager)|safe}}
-{%endblock admincontent%}
+{% from 'part/pager3' import pager_funct %}
+{{ pager_funct(pager)|safe }}
+{% endblock admincontent %}
 
 
-{%block  endscript%}
+{% block  endscript %}
 <script type="text/javascript">
 $(document).ready(function(){
 $("[type=checkbox]").click(function(){
@@ -91,4 +90,4 @@ $("[type=checkbox]").click(function(){
 	});
 });
 </script>
-{%endblock  endscript%}
+{% endblock  endscript %}

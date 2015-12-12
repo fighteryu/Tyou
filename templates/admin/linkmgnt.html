@@ -66,6 +66,8 @@
 	</tbody>
 </table>
 
+{% from 'part/pager3' import pager_funct %}
+{{ pager_funct(pager)|safe }}
 {%endblock admincontent%}
 
 {%block endscript%}

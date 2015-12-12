@@ -1,6 +1,6 @@
-{%extends "part/adminbase"%}
-{%block title%}Admin Blog--文章管理{%endblock title%}
-{%block admincontent%}
+{% extends "part/adminbase"  %}
+{% block title %}Admin Blog--文章管理{% endblock title %}
+{% block admincontent %}
 <table class="widetable table table-condensed table-striped table-bordered table-hover">
 	<thead>
 		<tr>
@@ -16,37 +16,37 @@
 		</tr>
 	</thead>
 	<tbody>
-		{%for post in postlist%}
+		{% for post in postlist %}
 		<tr>
 			<th>
-				<input class="page" type="checkbox" value="on" name="{{post.post_id}}">
+				<input class="page" type="checkbox" value="on" name="{{ post.post_id }}">
 			</th>
 			<td>
-				<div class="time">{{post.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
+				<div class="time">{{ post.create_time.strftime("%Y-%m-%d %H:%M") }}</div>
 			</td>
 			<td>
-				<a href="/admin/post/{{post.post_id}}">[编辑]</a>
-				<a href="/admin/overview/{{post.post_id}}">[预览]</a>
-				<a href="/page/{{post.url}}">{{post.title}}</a>
+				<a href="/admin/post/{{ post.post_id }}">[编辑]</a>
+				<a href="/admin/overview/{{ post.post_id }}">[预览]</a>
+				<a href="/page/{{ post.url }}">{{ post.title }}</a>
 			</td>
-			{%if post.is_original%}
-			<td><a href="/admin/postlist?is_original=true">是</a></td>{%else%}
-			<td><a href="/admin/postlist?is_original=false">否</a></td>{%endif%}
-			{%if post.allow_visit%}
-			<td><a href="/admin/postlist?allow_visit=true">发布</a></td>{%else%}
-			<td><a href="/admin/postlist?allow_visit=false">不发布</a></td>{%endif%}
-			{%if post.allow_comment%}
-			<td><a href="/admin/postlist?allow_comment=true">允许</a></td>{%else%}
-			<td><a href="/admin/postlist?allow_comment=false">不允许</a></td>{%endif%}
+			{% if post.is_original %}
+			<td><a href="/admin/postlist?is_original=true">是</a></td>{% else %}
+			<td><a href="/admin/postlist?is_original=false">否</a></td>{% endif %}
+			{% if post.allow_visit %}
+			<td><a href="/admin/postlist?allow_visit=true">发布</a></td>{% else %}
+			<td><a href="/admin/postlist?allow_visit=false">不发布</a></td>{% endif %}
+			{% if post.allow_comment %}
+			<td><a href="/admin/postlist?allow_comment=true">允许</a></td>{% else %}
+			<td><a href="/admin/postlist?allow_comment=false">不允许</a></td>{% endif %}
 		</tr>
-		{%endfor%}				
+		{% endfor %}				
 	</tbody>
 </table>
-{%from 'part/pager' import pager_funct%}
-{{pager_funct('/admin/postlist',pager, parameter)|safe}}
-{%endblock admincontent%}
+{% from 'part/pager3' import pager_funct %}
+{{ pager_funct(pager)|safe }}
+{% endblock admincontent %}
 
-{%block  endscript%}
+{% block  endscript %}
 <script type="text/javascript">
 $(document).ready(function(){
 	$("[type=checkbox]").click(function(){
@@ -78,4 +78,4 @@ $(document).ready(function(){
 	});
 });
 </script>
-{%endblock  endscript%}
+{% endblock  endscript %}

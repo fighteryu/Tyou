@@ -9,10 +9,15 @@ import os
 import json
 import base64
 import hashlib
-from flask.ext.sqlalchemy import SQLAlchemy
+
+from sqlalchemy_wrapper import SQLAlchemy
 from sqlalchemy import or_
 
-db = SQLAlchemy()
+import config
+
+
+db = SQLAlchemy(config.SQLALCHEMY_DATABASE_URI,
+                pool_recycle=config.SQLALCHEMY_POOL_RECYCLE)
 
 
 class User(db.Model):
@@ -31,18 +36,18 @@ class User(db.Model):
 
     @classmethod
     def get_config(cls):
-        user = cls.query.first()
+        user = cls.query(cls).first()
         if user and user.config:
             return json.loads(user.config)
         return None
 
     @classmethod
     def get_by_name(cls, username):
-        return cls.query.filter_by(username=username).first()
+        return cls.query(cls).filter_by(username=username).first()
 
     @classmethod
     def get_one(cls):
-        return cls.query.first()
+        return cls.query(cls).first()
 
     def validate(self, password):
         sha512 = hashlib.sha512()
@@ -96,7 +101,7 @@ class Post(db.Model):
     def get_page(cls, offset, limit, **kargs):
         """If pubic_only == False , return posts even if allow_visit = False
         """
-        query = cls.query
+        query = cls.query(cls)
         for key in kargs:
             query = query.filter(cls.__dict__[key] == kargs[key])
 
@@ -105,7 +110,7 @@ class Post(db.Model):
 
     @classmethod
     def count(cls, **kargs):
-        query = cls.query
+        query = cls.query(cls)
         for key in kargs:
             query = query.filter(cls.__dict__[key] == kargs[key])
         return query.count()
@@ -113,24 +118,24 @@ class Post(db.Model):
     @classmethod
     def get_by_id(cls, post_id, public_only=True):
         if public_only is True:
-            return cls.query.filter_by(
+            return cls.query(cls).filter_by(
                 allow_visit=True, post_id=post_id).first()
         else:
-            return cls.query.filter_by(
+            return cls.query(cls).filter_by(
                 post_id=post_id).first()
 
     @classmethod
     def get_by_url(cls, url, public_only=True):
         if public_only is True:
-            return cls.query.filter_by(url=url, allow_visit=True).first()
+            return cls.query(cls).filter_by(url=url, allow_visit=True).first()
         else:
-            return cls.query.filter_by(url=url).first()
+            return cls.query(cls).filter_by(url=url).first()
 
     @classmethod
     def tag_search(cls, keyword, offset, limit):
         if not keyword:
             return []
-        return cls.query.filter_by(allow_visit=True).\
+        return cls.query(cls).filter_by(allow_visit=True).\
             filter(cls.tags.like("%,"+keyword+",%")).\
             order_by(cls.post_id.desc()).offset(offset).limit(limit).all()
 
@@ -138,14 +143,14 @@ class Post(db.Model):
     def tag_search_count(cls, keyword):
         if not keyword:
             return 0
-        return cls.query.filter_by(allow_visit=True).\
+        return cls.query(cls).filter_by(allow_visit=True).\
             filter(cls.tags.like("%,"+keyword+",%")).count()
 
     @classmethod
     def text_search(cls, words, offset, limit):
         if len(words) == 0 or len(words) > 5:
             return []
-        query = cls.query.filter_by(allow_visit=True)
+        query = cls.query(cls).filter_by(allow_visit=True)
         for word in words:
             query = query.filter(or_(
                 cls.raw_content.like("%" + word + "%"),
@@ -158,7 +163,7 @@ class Post(db.Model):
     def text_search_count(cls, words):
         if len(words) == 0 or len(words) > 5:
             return 0
-        query = cls.query.filter_by(allow_visit=True)
+        query = cls.query(cls).filter_by(allow_visit=True)
         for word in words:
             query = query.filter(or_(
                 cls.raw_content.like("%" + word + "%"),
@@ -168,7 +173,7 @@ class Post(db.Model):
 
     @classmethod
     def get_last_x(cls, limit):
-        return cls.query.filter_by(allow_visit=True).\
+        return cls.query(cls).filter_by(allow_visit=True).\
             order_by(cls.post_id.desc()).all()
 
     def get_tags(self):
@@ -241,7 +246,7 @@ class Tag(db.Model):
 
     @classmethod
     def get_one(cls, name):
-        return cls.query.filter_by(name=name).first()
+        return cls.query(cls).filter_by(name=name).first()
 
     @classmethod
     def add(cls, taglist):
@@ -274,10 +279,11 @@ class Tag(db.Model):
 
     @classmethod
     def get_first_X(cls, count):
-        return cls.query.order_by(cls.count.desc()).limit(count).all()
+        return cls.query(cls).order_by(cls.count.desc()).limit(count).all()
 
 
 class Comment(db.Model):
+    __tablename__ = "comment"
     comment_id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer)
     url = db.Column(db.String(64))
@@ -292,7 +298,7 @@ class Comment(db.Model):
 
     @classmethod
     def get_by_post_id(cls, post_id):
-        result = cls.query.filter_by(post_id=post_id).all()
+        result = cls.query(cls).filter_by(post_id=post_id).all()
         for i in range(len(result)):
             result[i].content = result[i].content.replace(" ", "&nbsp;")
             result[i].content = result[i].content.replace("\n", "<br>")
@@ -313,21 +319,21 @@ class Comment(db.Model):
     @classmethod
     def count(cls, post_id=None):
         if post_id is None:
-            return cls.query.count()
+            return cls.query(cls).count()
         else:
-            return cls.query.filter_by(post_id=post_id).count()
+            return cls.query(cls).filter_by(post_id=post_id).count()
 
     @classmethod
     def get_last_X(cls, count):
-        return cls.query.order_by(cls.comment_id.desc()).limit(count).all()
+        return cls.query(cls).order_by(cls.comment_id.desc()).limit(count).all()
 
     @classmethod
     def get_page(cls, offset, limit, post_id=-1):
         if post_id == -1:
-            commentlist = cls.query.order_by(cls.comment_id.desc()).\
+            commentlist = cls.query(cls).order_by(cls.comment_id.desc()).\
                 offset(offset).limit(limit).all()
         else:
-            commentlist = cls.query.order_by(cls.comment_id.desc()).\
+            commentlist = cls.query(cls).order_by(cls.comment_id.desc()).\
                 filter_by(post_id=post_id).offset(offset).limit(limit).all()
         return commentlist
 
@@ -341,6 +347,7 @@ class Comment(db.Model):
 
 
 class Link(db.Model):
+    __tablename__ = "link"
     link_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     href = db.Column(db.String(1024))
@@ -349,20 +356,24 @@ class Link(db.Model):
     display = db.Column(db.Boolean)
 
     @classmethod
+    def count(cls):
+        return cls.query(cls).count()
+
+    @classmethod
     def get_page(cls, offset, limit):
-        return cls.query.offset(offset).limit(limit).all()
+        return cls.query(cls).offset(offset).limit(limit).all()
 
     @classmethod
     def get_X(cls, limit):
-        return cls.query.filter_by(display=True).limit(limit).all()
+        return cls.query(cls).filter_by(display=True).limit(limit).all()
 
     @classmethod
     def get_by_id(cls, link_id):
-        return cls.query.filter_by(link_id=int(link_id)).first()
+        return cls.query(cls).filter_by(link_id=int(link_id)).first()
 
     @classmethod
     def get_by_href(cls, href):
-        return cls.query.filter_by(href=href).first()
+        return cls.query(cls).filter_by(href=href).first()
 
     def save(self):
         db.session.add(self)
@@ -385,25 +396,25 @@ class Media(db.Model):
 
     @classmethod
     def count(cls):
-        return cls.query.count()
+        return cls.query(cls).count()
 
     @classmethod
     def get_page(cls, offset, limit):
-        medialist = cls.query.order_by(cls.create_time.desc()).offset(offset).\
-            limit(limit).all()
+        medialist = cls.query(cls).order_by(cls.create_time.desc()).\
+            offset(offset).limit(limit).all()
         return medialist
 
     @classmethod
     def get_by_id(cls, fileid):
-        return cls.query.filter_by(fileid=fileid).first()
+        return cls.query(cls).filter_by(fileid=fileid).first()
 
     @classmethod
     def get_by_fileid(cls, fileid):
-        return cls.query.filter_by(fileid=fileid).first()
+        return cls.query(cls).filter_by(fileid=fileid).first()
 
     @classmethod
     def get_version(cls, filename):
-        media = cls.query.filter_by(filename=filename).\
+        media = cls.query(cls).filter_by(filename=filename).\
             order_by(cls.create_time.desc()).first()
 
         if media:
@@ -418,14 +429,14 @@ class Media(db.Model):
             output:
 
         """
-        return ("f" + str(version) + filename).encode("utf8")
+        return "f" + str(version) + filename
 
     def filepath(self, upload_folder):
         return os.path.join(upload_folder, self.local_filename)
 
     @property
     def local_filename(self):
-        return ("f"+str(self.version)+self.filename).encode("utf8")
+        return "f"+str(self.version)+self.filename
 
     def save(self):
         db.session.add(self)
@@ -464,9 +475,9 @@ def gen_sidebar(config):
 
 def export_all():
     """export all blog data"""
-    postlist = Post.query.all()
-    linklist = Link.query.all()
-    medialist = Media.query.all()
+    postlist = Post.query(Post).all()
+    linklist = Link.query(Link).all()
+    medialist = Media.query(Media).all()
 
     ex_post = []
     for post in postlist:

@@ -1,24 +1,43 @@
 #!/bin/env python
 # coding:utf-8
+from compat import urlparse, parse_qs
 
 
-def gen_pager(sumitem, perpage, currentpage=1):
-    '''
-    :param sumitem:total count of items
-    :param perpage:: how many items displayed in each page
-    return:dict to draw pagination
-    '''
-    pagenumber = sumitem/perpage
-    if sumitem % perpage != 0:
-        pagenumber += 1
+def gen_pager(current, count, pagesize, baseurl, seperator="page"):
+    """
+    current: current page index, shoule always bigger than 0
+    return {
+        "current": xxx,
+        "previous": xxx,
+        "next": xxx
+        "total_page": xxx
+    }
+    """
+    if current <= 0:
+        raise Exception("current page should always bigger than 0!")
 
-    has_prv = False
-    has_next = False
-    if currentpage < pagenumber:
-        has_next = True
-    if currentpage > 1:
-        has_prv = False
-    return {"pagenumber": pagenumber,
-            "currentpage": currentpage,
-            "has_prv": has_prv,
-            "has_next": has_next}
+    total_page = count // pagesize + 1
+    if count % pagesize == 0:
+        total_page -= 1
+    if total_page == 0:
+        total_page = 1
+
+    pager = {}
+    pager["current"] = current
+    pager["previous"] = current - 1 if current - 1 > 0 else None
+    pager["next"] = current + 1 if current + 1 <= total_page else None
+    pager["total_page"] = total_page
+    pager["seperator"] = seperator
+
+    # this is to make sure baseurl + "page=<int: page>" always make a valid url
+    frag = urlparse(baseurl)
+    args = parse_qs(frag.query)
+    # rebuild the query string, but ignore "page"
+    query = "&".join(["=".join((k, args[k][0])) for k in args if k != seperator])
+    baseurl = frag.path
+    if query:
+        baseurl += "?" + query + "&"
+    else:
+        baseurl += "?"
+    pager["baseurl"] = baseurl
+    return pager

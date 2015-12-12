@@ -6,12 +6,13 @@
 
 """
 
-import urllib
 from datetime import datetime
-from urlparse import urljoin
 from werkzeug.contrib.atom import AtomFeed
 from flask import Blueprint, request, render_template, make_response, g
+
 from models import Post
+
+from compat import urljoin, quote
 
 frontend = Blueprint('/', __name__, template_folder="../templates")
 
@@ -27,17 +28,17 @@ def recent_feed():
     postlist = Post.get_page(0, g.config["RSS_ITEM_COUNT"], allow_visit=True)
     for post in postlist:
         if not post.need_key:
-            feed.add(post.title, unicode(post.content[0:300]+'......'),
+            feed.add(post.title, post.content[0:300]+'......',
                      content_type='html',
                      author=u"博主",
-                     url=make_external('page/'+urllib.quote(post.url)),
+                     url=make_external('page/' + quote(post.url)),
                      updated=post.update_time,
                      published=post.create_time)
         else:
             feed.add(post.title, u"文章被加密，输入密码查看",
                      content_type='html',
                      author=u"博主",
-                     url=make_external('page/'+urllib.quote(post.url)),
+                     url=make_external('page/' + quote(post.url)),
                      updated=post.update_time,
                      published=post.create_time)
 

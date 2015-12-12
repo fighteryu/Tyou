@@ -18,11 +18,13 @@ adminor = Blueprint('admin', __name__, template_folder="../templates")
 
 
 @adminor.route("/postlist")
-@adminor.route('/postlist/<int:page>')
 @admin_required
-def adminpostlist(page=1):
+def adminpostlist():
     perpage = g.config["ADMIN_ITEM_COUNT"]
     args = request.args
+
+    page = int(args.get("page", 1))
+
     kargs = {}
     if "is_original" in args and args["is_original"] == "true":
         kargs["is_original"] = True
@@ -39,14 +41,9 @@ def adminpostlist(page=1):
     elif "allow_comment" in args and args["allow_comment"] == "false":
         kargs["allow_comment"] = False
 
-    postlist = Post.get_page(
-        offset=(page-1)*perpage,
-        limit=perpage,
-        **kargs)
+    postlist = Post.get_page(offset=(page-1)*perpage, limit=perpage, **kargs)
 
-    pager = gen_pager(Post.count(**kargs),
-                      g.config["ADMIN_ITEM_COUNT"],
-                      page)
+    pager = gen_pager(page, Post.count(**kargs), perpage, request.url)
     return render_template('admin/postlist.html',
                            postlist=postlist,
                            admin_url="pagelist",
@@ -143,14 +140,16 @@ def overview(post_id=-1):
 
 
 @adminor.route("/linkmgnt")
-@adminor.route("/linkmgnt/<int:page>")
 @admin_required
-def linkmgnt(page=1):
-    per_page = g.config["ADMIN_ITEM_COUNT"]
-    linklist = Link.get_page(offset=per_page*(page-1), limit=per_page)
+def linkmgnt():
+    perpage = g.config["ADMIN_ITEM_COUNT"]
+    page = int(request.args.get("page", 1))
+    linklist = Link.get_page(offset=perpage*(page-1), limit=perpage)
+    pager = gen_pager(page, Link.count(), perpage, request.url)
     return render_template('admin/linkmgnt.html',
                            linklist=linklist,
                            admin_url="linkmgnt",
+                           pager=pager
                            )
 
 
@@ -186,15 +185,12 @@ def setting():
 
 
 @adminor.route('/mediamgnt', methods=['GET'])
-@adminor.route('/mediamgnt/<int:page>', methods=["GET"])
 @admin_required
-def mediamgnt(page=1):
-    per_page = g.config["ADMIN_ITEM_COUNT"]
-    medialist = Media.get_page(per_page*(page-1), per_page)
-    pager = gen_pager(
-        Media.count(),
-        per_page,
-        page)
+def mediamgnt():
+    page = int(request.args.get("page", 1))
+    perpage = g.config["ADMIN_ITEM_COUNT"]
+    medialist = Media.get_page(perpage * (page-1), perpage)
+    pager = gen_pager(page, Media.count(), perpage, request.url)
     return render_template('admin/mediamgnt.html',
                            admin_url="mediamgnt",
                            medialist=medialist,
@@ -203,23 +199,23 @@ def mediamgnt(page=1):
 
 
 @adminor.route('/commentmgnt', methods=["GET"])
-@adminor.route('/commentmgnt/<int:page>')
 @admin_required
-def commentmgnt(page=1):
+def commentmgnt():
     if request.method == "GET":
-        per_page = g.config["ADMIN_ITEM_COUNT"]
+        page = int(request.args.get("page", 1))
+        perpage = g.config["ADMIN_ITEM_COUNT"]
         if 'post_id' in request.args:
             post_id = request.args['post_id']
             commentlist = Comment.get_page(
-                offset=per_page*(page-1),
-                limit=per_page,
+                offset=perpage*(page-1),
+                limit=perpage,
                 post_id=post_id)
-            pager = gen_pager(Comment.count(post_id), per_page, page)
+            pager = gen_pager(page, Comment.count(post_id), perpage, request.url)
         else:
             commentlist = Comment.get_page(
-                offset=per_page*(page-1),
-                limit=per_page)
-            pager = gen_pager(Comment.count(), per_page, page)
+                offset=perpage*(page-1),
+                limit=perpage)
+            pager = gen_pager(page, Comment.count(), perpage, request.url)
         return render_template('admin/commentmgnt.html',
                                commentlist=commentlist,
                                admin_url="commentmgnt",
@@ -248,7 +244,8 @@ def import_blog():
     f = request.files["file"]
 
     try:
-        data = json.load(f.stream)
+        data = f.stream.read().decode("utf-8")
+        data = json.loads(data)
         links = data.pop("links", [])
         medias = data.pop("medias", [])
         posts = data.pop("posts", [])
@@ -316,7 +313,6 @@ def import_blog():
                 new_comment.create_time = \
                     datetime.fromtimestamp(new_comment.create_time)
                 new_comment.save()
-
     except Exception as e:
         return str(e)
 
