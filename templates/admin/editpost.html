@@ -1,12 +1,20 @@
 {%extends 'part/adminbase'%}
 {%block title%}Admin Blog--编辑文章{%endblock title%}
 {%block extraadminhead%}
-<script type="text/javascript" src="/static/js/lib/ckeditor/ckeditor.js"></script>
+	{% if editor=="html" %}
+		<script type="text/javascript" src="/static/js/lib/ckeditor/ckeditor.js"></script>
+		<script src="/static/js/admin/html.js" type="text/javascript" charset="utf-8" async defer></script>
+	{% else %}
+		<link rel="stylesheet" type="text/css" href="/static/frozen/editormd/css/editormd.min.css">
+		<script type="text/javascript" src="/static/frozen/editormd/js/editormd.min.js"></script>
+		<script src="/static/js/admin/markdown.js" type="text/javascript" charset="utf-8" async defer></script>
+	{% endif %}
 {%endblock extraadminhead%}
 
 {%block admincontent%}     
 	<form action="" method="post">
-		<input type="hidden" name="post_id" id="post_id" {%if post.post_id %}value="{{post.post_id}}" {%endif%}>
+		<input type="hidden" name="post_id" id="post_id" {%if post.post_id %}value="{{post.post_id}}"{%endif%}/>
+		<input type="hidden" name="editor" id="content_editor" value="{% if admin_url=='post_html' %}html{% else %}markdown{%endif%}"/> 
 		<div class="input-group">
 			<span class="input-group-addon">标题</span>
 			<input type="text"  name="title" id="title" value="{{post.title}}" class="form-control" placeholder="Title">
@@ -68,50 +76,48 @@
 
 		<button class="btn btn-primary" id="submit">提交</button><button class="btn btn-primary" id="checkpost">预览</button><button class="btn btn-primary" onclick="window.open('/admin/mediamgnt');return false" >文件管理</button>
 	</form>
-	<textarea id="editor" >{{post.content}}</textarea>
+	<div class="row">
+		<div class="col-md-12">
+			{% if editor == "html" %}
+				<textarea id="editor" >{{ post.content }}</textarea>
+			{% else %}
+				<div class="btn-group" role="group">
+		        	<button class="btn btn-success" id="show-btn">显示编辑器</button>
+		        	<button class="btn btn-success" id="hide-btn">隐藏编辑器</button>
+		        	<button class="btn btn-success" id="get-md-btn">获取Markdown(源码)</button>
+		        	<button class="btn btn-success" id="get-html-btn">获取HTML(源码)</button>
+		        	<button class="btn btn-success" id="watch-btn">开启实时预览</button>
+		        	<button class="btn btn-success" id="unwatch-btn">关闭实时预览</button>
+		        	<button class="btn btn-success" id="fullscreen-btn">全屏(按ESC取消)</button>
+		        	<button class="btn btn-success" id="show-toolbar-btn">显示工具栏</button>
+		        	<button class="btn btn-success" id="close-toolbar-btn">关闭工具栏</button>
+		    	</div>
+		    	<div id="editor-area">
+		      		<textarea id="editor" style="display:none">{{ post.content }}</textarea>
+		     	</div>
+			{% endif %}	
+		</div>
+	</div>
 </div>
 {%endblock admincontent%}
 {%block endscript%}
 <script type="text/javascript">
 $(document).ready(function(){
-	editor = CKEDITOR.replace( 'editor');
-	
-//override ctrl+s function
-	var isCtrl = false;
-	editor.on( 'contentDom', function( evt ){
-        	editor.document.on( 'keyup', function(event){
-            	if(event.data.$.keyCode == 17) isCtrl=false;
-       		});
-
-        	editor.document.on( 'keydown', function(event){
-            	if(event.data.$.keyCode == 17) isCtrl=true;
-            	if(event.data.$.keyCode == 83 && isCtrl == true)
-            	{
-	                //The preventDefault() call prevents the browser's save popup to appear.
-	                //The try statement fixes a weird IE error.
-	                try {
-	                    event.data.$.preventDefault();
-	                    $("#submit").click();
-
-	                } catch(err) {}
-	                //Call to your save function
-	                return false;
-            	}
-        	});
-        });
 	$('#submit').click(submitEvent);
 	$("#checkpost").click(turnToPage);
 	initClick();
 	setInterval(auto_save,1000*45);
 	$(window).bind('beforeunload', function(){
 		if($("#url").val()){
-	  		return 'Are you sure to leave?';
+	  		return "确认离开这个页面吗？";
 		}
 	});
 });
 
-function submitEvent(){
-	var content=editor.getData();
+
+function submitEvent(event){
+	event.preventDefault();
+	var content=getContent();
 	$("#url").val($("#url").val().trim());
 	$("#title").val($("#title").val().trim());
 	$("#tags").val($("#tags").val().trim());
@@ -127,6 +133,7 @@ function submitEvent(){
 	data.content=content;
 	data.keywords=$("#keywords").val();
 	data.metacontent=$("#metacontent").val();
+	data.editor=$("#content_editor").val();
 	if($("#allow_comment").attr("mark")=="allow_comment"){data.allow_comment=true}else{data.allow_comment=false};
 	if($("#allow_visit").attr("mark")=="allow_visit"){data.allow_visit=true}else{data.allow_visit=false};
 	if($("#is_original").attr("mark")=="is_original"){data.is_original=true}else{data.is_original=false};
@@ -135,7 +142,7 @@ function submitEvent(){
 	// data.allow_comment=$("#allow_comment").is(":checked");
 	// data.allow_visit=$("#allow_visit").is(":checked");
 	data.post_id=parseInt($("#post_id").val());
-	data=JSON_stringify(data,false);
+	data=JSON.stringify(data,false);
 	$.ajax({
 		type:"post",
 		contentType:"application/json",
@@ -162,6 +169,7 @@ function turnToPage(){
 	}
 	return false;
 }
+
 function initClick(){
 	$(".dropmenu").click(function(){
 		var choosecontent=$(this).text();
@@ -220,7 +228,5 @@ function auto_save(){
 		$("#submit").click();		
 	}
 }
-
-
- </script>
+</script>
 {%endblock  endscript%}

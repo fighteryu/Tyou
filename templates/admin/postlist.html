@@ -9,10 +9,11 @@
 			</th>
 			<th>日期</th>
 			<th>标题</th>
-			<th class="num" scope="col">原创
-			</th>
+			<th class="num" scope="col">原创</th>
 			<th>状态</th>
 			<th>允许评论</th>
+			<th>密码</th>
+			<th>格式</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -38,6 +39,10 @@
 			{% if post.allow_comment %}
 			<td><a href="/admin/postlist?allow_comment=true">允许</a></td>{% else %}
 			<td><a href="/admin/postlist?allow_comment=false">不允许</a></td>{% endif %}
+			{% if post.need_key %}
+			<td>需要</td>{% else %}
+			<td>不需要</td>{% endif %}
+			<td>{{ post.editor }}</td>
 		</tr>
 		{% endfor %}				
 	</tbody>

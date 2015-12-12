@@ -6,9 +6,11 @@
 
 """
 import os
+import re
 import json
 import base64
 import hashlib
+import markdown2
 
 from sqlalchemy_wrapper import SQLAlchemy
 from sqlalchemy import or_
@@ -76,6 +78,8 @@ class Post(db.Model):
     update_time = db.Column(db.DateTime)
     # tag seperated by comma
     tags = db.Column(db.String(256))
+    # editor html or markdown
+    editor = db.Column(db.String(10))
     allow_visit = db.Column(db.Boolean)
     allow_comment = db.Column(db.Boolean)
     need_key = db.Column(db.Boolean)
@@ -176,6 +180,19 @@ class Post(db.Model):
         return cls.query(cls).filter_by(allow_visit=True).\
             order_by(cls.post_id.desc()).all()
 
+    @classmethod
+    def gen_raw_content(cls, content, editor):
+        """Remove unused mark up tags, so that mysql is able to do text search
+        a silly way to convert MarkDown to plain text:
+            1. MarkDown to HTML
+            2. HTML to text
+        """
+        if editor == "markdown":
+            content = markdown2.markdown(content)
+            return re.sub('<[^<]+?>', "", content)
+        elif editor == "html":
+            return re.sub('<[^<]+?>', "", content)
+
     def get_tags(self):
         taglist = self.tags.split(",")
         taglist = [tag for tag in taglist if tag]
@@ -184,6 +201,20 @@ class Post(db.Model):
     def to_tags(self, taglist):
         tags = ",".join(taglist)
         return "," + tags + ","
+
+    @property
+    def html_content(self):
+        if self.editor == "html":
+            return self.content
+        elif self.editor == "markdown":
+            data = markdown2.markdown(self.content)
+            return data
+        else:
+            return ""
+
+    @property
+    def plain_content(self):
+            return self.raw_content
 
     def update_tags(self, new_string):
         """ Post.tags is a string in which multi tags are seperated by ",", we

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-hans">
 	{%set jquery_version="1.10.2"%}
 	{%set less_version="1.5.0"%}
 	<head>

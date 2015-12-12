@@ -57,7 +57,9 @@ def pageinplace():
     """Check if a url is in place
     """
     url = request.args["url"]
-    post_id = int(request.args["post_id"])
+    post_id = request.args.get("post_id", "")
+    if post_id.isdigit():
+        post_id = int(post_id)
     post = Post.get_by_url(url=url)
 
     # same post or the post doesn't exist
@@ -74,17 +76,24 @@ def pageinplace():
 @admin_required
 def editpost(post_id=None):
     """show the edit page, update the post
+    choice of editor:
+        while editing an existing post, use post.editor as the editor
+        editing a new post, use request.args["editor"] as the editor
     """
     if request.method == "GET":
-        post = Post()
         if post_id is not None:
             post = Post.get_by_id(post_id=post_id, public_only=False)
+            editor = post.editor
             if not post:
                 abort(404)
-        return render_template(
-            'admin/editpost.html',
-            admin_url="post",
-            post=post)
+        else:
+            post = Post()
+            editor = request.args.get("editor", "markdown")
+
+        return render_template('admin/editpost.html',
+                               admin_url="post_" + editor,
+                               post=post,
+                               editor=editor)
     elif request.method == "POST":
         data = request.json
         now_time = datetime.now()
@@ -95,6 +104,7 @@ def editpost(post_id=None):
         else:
             post = Post()
             post.create_time = now_time
+        post.editor = data.get("editor", "markdown")
         post.update_time = now_time
         post.title = data.get("title", "")
         post.update_tags(data.get("tags", ""))
@@ -102,7 +112,7 @@ def editpost(post_id=None):
         post.keywords = data.get("keywords", "")
         post.metacontent = data.get("metacontent", "")
         post.content = data.get("content", "")
-        post.raw_content = re.sub('<[^<]+?>', "", post.content)
+        post.raw_content = Post.gen_raw_content(post.content, post.editor)
         post.allow_comment = data.get("allow_comment", True)
         post.allow_visit = data.get("allow_visit", True)
         post.is_original = data.get("is_original", True)
