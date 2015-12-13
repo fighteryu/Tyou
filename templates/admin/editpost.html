@@ -6,30 +6,50 @@
 		<script src="/static/js/admin/html.js" type="text/javascript" charset="utf-8" async defer></script>
 	{% else %}
 		<link rel="stylesheet" type="text/css" href="/static/frozen/editormd/css/editormd.min.css">
-		<script type="text/javascript" src="/static/frozen/editormd/js/editormd.min.js"></script>
-		<script src="/static/js/admin/markdown.js" type="text/javascript" charset="utf-8" async defer></script>
+		<script src="/static/frozen/editormd/js/editormd.min.js"></script>
+		<script src="/static/frozen/editormd/lib/marked.min.js"></script>
+        <script src="/static/frozen/editormd/lib/prettify.min.js"></script>
+        <script src="/static/frozen/editormd/lib/raphael.min.js"></script>
+        <script src="/static/frozen/editormd/lib/underscore.min.js"></script>
+        <script src="/static/frozen/editormd/lib/sequence-diagram.min.js"></script>
+        <script src="/static/frozen/editormd/lib/flowchart.min.js"></script>
+        <script src="/static/frozen/editormd/lib/jquery.flowchart.min.js"></script>
+		<script src="/static/js/admin/markdown.js"></script>
+
 	{% endif %}
 {%endblock extraadminhead%}
 
 {%block admincontent%}     
 	<form action="" method="post">
+	<!-- add two hidden input to prevent from -->
+		<input type="text" style="display:none">
+		<input type="password" style="display:none">
+
 		<input type="hidden" name="post_id" id="post_id" {%if post.post_id %}value="{{post.post_id}}"{%endif%}/>
 		<input type="hidden" name="editor" id="content_editor" value="{% if admin_url=='post_html' %}html{% else %}markdown{%endif%}"/> 
 		<div class="input-group">
 			<span class="input-group-addon">标题</span>
 			<input type="text"  name="title" id="title" value="{{post.title}}" class="form-control" placeholder="Title">
-		</div><div class="input-group">
+		</div>
+		<div class="input-group">
 			<span class="input-group-addon">Url</span>
 			<input type="text"   name="url" id="url" value="{{post.url}}" class="form-control">
-		</div><div class="input-group">
+		</div>
+		<div class="input-group">
 			<span class="input-group-addon">标签</span>
 			<input type="text" name="tags" id="tags" value="{{",".join(post.get_tags())}}" class="form-control" placeholder="逗号隔开">
-		</div><div class="input-group">
+		</div>
+		<div class="input-group">
 			<span class="input-group-addon">关键词</span>
 			<input type="text" name="keywords" id="keywords" value="{{post.keywords}}" class="form-control" placeholder="Meta keywords for search engine,separated by comma">
-		</div><div class="input-group">
+		</div>
+		<div class="input-group">
 			<span class="input-group-addon">meta content</span>
 			<input type="text" name="metacontent" id="metacontent" value="{{post.metacontent}}" class="form-control" placeholder="Meta content for search engine">
+		</div>
+		<div class="input-group">
+			<span class="input-group-addon">密码</span>
+			<input type="text" name="password" id="password" value="{{post.password}}" class="form-control" placeholder="留空使用全局默认密码" {%if post.need_key == False%}disabled{% endif %}>
 		</div>
 		<div class="btn-group">
 			<div class="btn-group">
@@ -139,6 +159,7 @@ function submitEvent(event){
 	if($("#is_original").attr("mark")=="is_original"){data.is_original=true}else{data.is_original=false};
 	if($("#need_key").attr("mark")=="need_key"){data.need_key=true}else{data.need_key=false};
 
+	data.password = $("#password").val();
 	// data.allow_comment=$("#allow_comment").is(":checked");
 	// data.allow_visit=$("#allow_visit").is(":checked");
 	data.post_id=parseInt($("#post_id").val());
@@ -176,6 +197,14 @@ function initClick(){
 		var mark = $(this).attr("mark");
 		$(this).parent().parent().parent().children(".menu").text(choosecontent);
 		$(this).parent().parent().parent().children(".menu").attr("mark", mark);
+
+		// disble need_key is it's false
+		if($("#need_key").attr("mark")=="need_key"){
+			$("#password").prop("disabled", false);
+		}
+		else{
+			$("#password").prop('disabled', true);
+		}
 	});
 	//check is the url is in use
 	$("#url").blur(function(){

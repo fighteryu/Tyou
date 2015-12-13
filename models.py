@@ -76,6 +76,8 @@ class Post(db.Model):
     metacontent = db.Column(db.String(256))
     create_time = db.Column(db.DateTime)
     update_time = db.Column(db.DateTime)
+    # required if need_key is True
+    password = db.Column(db.String(20))
     # tag seperated by comma
     tags = db.Column(db.String(256))
     # editor html or markdown

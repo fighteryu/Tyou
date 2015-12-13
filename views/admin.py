@@ -117,6 +117,7 @@ def editpost(post_id=None):
         post.allow_visit = data.get("allow_visit", True)
         post.is_original = data.get("is_original", True)
         post.need_key = data.get("need_key", False)
+        post.password = data.get("password", "")
         post.save()
         return jsonify(success=True,
                        post_id=post.post_id)

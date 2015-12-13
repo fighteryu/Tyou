@@ -55,12 +55,6 @@ def page(url=None):
 @frontend.route("/key/", methods=["POST"])
 def key():
     data = request.json
-    if g.config.get("POST_PASSWORD", "") != data.get("post_password", None):
-        return jsonify(
-            validate=False,
-            error=True,
-            message=u"Password error!")
-
     post = Post.get_by_url(url=data.get("posturl", ""), public_only=False)
     if not post:
         return jsonify(
@@ -68,6 +62,15 @@ def key():
             error=True,
             message="Post doesn't exists"
         )
+
+    post_password = post.password or g.config.get("POST_PASSWORD", "")
+
+    if post_password != data.get("post_password", None):
+        return jsonify(
+            validate=False,
+            error=True,
+            message=u"Password error!")
+
     else:
         return jsonify(
             validate=True,
