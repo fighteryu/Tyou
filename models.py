@@ -8,9 +8,11 @@
 import os
 import re
 import json
+import random
 import base64
 import hashlib
 import markdown2
+from datetime import datetime, timedelta
 
 from sqlalchemy_wrapper import SQLAlchemy
 from sqlalchemy import or_
@@ -194,6 +196,13 @@ class Post(db.Model):
             return re.sub('<[^<]+?>', "", content)
         elif editor == "html":
             return re.sub('<[^<]+?>', "", content)
+
+    @classmethod
+    def random_post(cls):
+        count = cls.query(cls).filter_by(allow_visit=True, need_key=False).count()
+        index = random.randint(0, count-1)
+        post = cls.query(cls).filter_by(allow_visit=True, need_key=False).offset(index).limit(1)
+        return post[0]
 
     def get_tags(self):
         taglist = self.tags.split(",")
@@ -484,6 +493,55 @@ class Media(db.Model):
             pass
         db.session.delete(self)
         db.session.commit()
+
+
+class Fail(db.Model):
+    """This table is used to keep up with failed password attempt.
+    """
+    __tablename__ = "fail"
+    fail_id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(15))
+    post_id = db.Column(db.Integer)
+    count = db.Column(db.Integer, default=0)
+    last_try = db.Column(db.DateTime)
+
+    @classmethod
+    def validate_client(cls, ip):
+        """if one ip address have too much login failure, that clinet will have
+        to wait for quite a few seconds
+        """
+        query = cls.query(cls).filter_by(ip=ip).order_by(cls.last_try.desc())
+        record = query.first()
+
+        if record.is_above_threshold():
+            latency = datetime.now() - record.last_try
+            if latency.total_seconds() < 5 :
+                return False
+        return True
+
+    @classmethod
+    def add_record(cls, ip, post_id):
+        record = cls.query(cls).filter_by(ip=ip, post_id=post_id).first()
+        if not record:
+            record = cls(ip=ip, post_id=post_id)
+            record.count = 0
+        record.count += 1
+        record.last_try = datetime.now()
+        db.session.add(record)
+        db.session.commit()
+        return record
+
+    @classmethod
+    def clear_record(cls, ip, post_id):
+        record = cls.query(cls).filter_by(ip=ip, post_id=post_id).first()
+        if record:
+            db.session.delete(record)
+            db.session.commit()
+
+    def is_above_threshold(self):
+        """if count > 5, the password attempt is above threadshold
+        """
+        return self.count > 5
 
 
 def gen_sidebar(config):
