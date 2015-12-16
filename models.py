@@ -79,7 +79,7 @@ class Post(db.Model):
     create_time = db.Column(db.DateTime)
     update_time = db.Column(db.DateTime)
     # required if need_key is True
-    password = db.Column(db.String(20))
+    password = db.Column(db.String(20), default="")
     # tag seperated by comma
     tags = db.Column(db.String(256))
     # editor html or markdown
