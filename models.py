@@ -12,7 +12,7 @@ import random
 import base64
 import hashlib
 import markdown2
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from sqlalchemy_wrapper import SQLAlchemy
 from sqlalchemy import or_
@@ -507,15 +507,15 @@ class Fail(db.Model):
 
     @classmethod
     def validate_client(cls, ip):
-        """if one ip address have too much login failure, that clinet will have
+        """if one ip address failed for quite a few times, that clinet will have
         to wait for quite a few seconds
         """
         query = cls.query(cls).filter_by(ip=ip).order_by(cls.last_try.desc())
         record = query.first()
 
-        if record.is_above_threshold():
+        if record and record.is_above_threshold():
             latency = datetime.now() - record.last_try
-            if latency.total_seconds() < 5 :
+            if latency.total_seconds() < 5:
                 return False
         return True
 
