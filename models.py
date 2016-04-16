@@ -55,11 +55,11 @@ class User(db.Model):
 
     def validate(self, password):
         sha512 = hashlib.sha512()
-        sha512.update(self.salt)
-        sha512.update(password)
+        sha512.update(self.salt.encode("utf8"))
+        sha512.update(password.encode("utf8"))
 
         hashed_password = base64.urlsafe_b64encode(sha512.digest())
-        return hashed_password == self.password
+        return hashed_password.decode("utf8") == self.password
 
     def save(self):
         db.session.add(self)
