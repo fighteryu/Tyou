@@ -49,8 +49,16 @@
 		{% if post.need_key%}
 		<h3 class="text-danger">本文需要密码访问</h3>
 		{% endif%}	
-		<article id="content" class="content">{{ post.html_content | safe }}</article>
-	{% elif post.need_key%}
+		{% if post.editor == "html"%}
+			<article id="content" class="content">{{ post.html_content | safe }}</article>
+		{% else %}
+			<article id="content" class="content">
+				<textarea name="markdowncontent" style="display:none">{{ post.content }}</textarea>
+			</article>
+		{% endif %}
+	{%endif%}
+	{% if admin_url!= "overview"%}
+		{% if post.need_key%}
 		<div class="searchform" style="">
 			<input type="password" id="post_password" placeholder="输入解密Key以继续,8-16数字、字母以及下划线组合">
 			<input type="button" id="decrypt" name="decrypt button" class="btn btn-primary" value="GO" onclick="show_encrypted_data();return false;"/>
@@ -58,13 +66,14 @@
 		<article id="content" class="content">
 			<textarea style="display:none"></textarea>
 		</article>
-	{% else%}
-		{% if post.editor == "html"%}
-			<article id="content" class="content">{{ post.html_content | safe }}</article>
 		{% else %}
-			<article id="content" class="content">
-				<textarea name="markdowncontent" style="display:none">{{ post.content }}</textarea>
-			</article>
+			{% if post.editor == "html"%}
+				<article id="content" class="content">{{ post.html_content | safe }}</article>
+			{% else %}
+				<article id="content" class="content">
+					<textarea name="markdowncontent" style="display:none">{{ post.content }}</textarea>
+				</article>
+			{% endif %}
 		{% endif %}
 	{% endif%}
 	<div class="divider"></div>
