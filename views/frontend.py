@@ -46,8 +46,7 @@ def page(url=None):
             'page.html',
             blogname=g.config["BLOGNAME"],
             post=post,
-            commentlist=commentlist,
-            is_admin=True)
+            commentlist=commentlist)
     else:
         abort(404)
 
@@ -63,7 +62,6 @@ def key():
             error=True,
             message="Post doesn't exists"
         )
-
 
     validate_result = Fail.validate_client(request.remote_addr)
     if validate_result is False:
