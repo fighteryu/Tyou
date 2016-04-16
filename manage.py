@@ -21,14 +21,14 @@ import string
 import os.path
 import hashlib
 import base64
-
+import MySQLdb
+import config
 from optparse import OptionParser
 from random import choice
 from string import Template
 from config import update_path
-update_path()
-
 import warnings
+update_path()
 warnings.filterwarnings('ignore')
 # File settings
 file_name = 'secret_keys.py'
@@ -78,8 +78,8 @@ def generate_keyfile(csrf_key, session_key):
     ))
     if os.path.exists(file_path):
         if options.force is None:
-            print "Warning: secret_keys.py file exists. \
-            Use 'generate_keys.py --force' to force overwrite."
+            print("Warning: secret_keys.py file exists."
+                  "Use 'generate_keys.py --force' to force overwrite.")
         else:
             write_file(output)
     else:
@@ -92,8 +92,6 @@ def generate_key():
     session_key = generate_randomkey(r)
     generate_keyfile(csrf_key, session_key)
 
-import MySQLdb
-import config
 db = MySQLdb.connect(
     host=config.mysqlhost,
     user=config.username,
@@ -125,9 +123,9 @@ def create_user(username, password):
         return
     sha512 = hashlib.sha512()
     salt = str(int(time.time()))
-    sha512.update(salt)
-    sha512.update(password)
-    hashed_password = base64.urlsafe_b64encode(sha512.digest())
+    sha512.update(salt.encode("utf8"))
+    sha512.update(password.encode("utf8"))
+    hashed_password = base64.urlsafe_b64encode(sha512.digest()).decode("utf8")
 
     conn = db.cursor()
     conn.execute(
