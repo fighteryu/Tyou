@@ -40,3 +40,5 @@
 	</div>
 </div>
 {%endblock content%}
+
+{%block analytics%}{% endblock analytics %}
