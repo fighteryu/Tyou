@@ -604,6 +604,7 @@ def export_all():
             "allow_comment": post.allow_comment,
             "need_key": post.need_key,
             "is_original": post.is_original,
+            "editor": post.editor,
             "num_lookup": post.num_lookup,
             "commentlist": ex_comment
         })
