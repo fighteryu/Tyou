@@ -6,24 +6,13 @@
 	{% if post.metacontent%}<meta name="description" content="{{ post.metacontent }}"/>{% endif%}
 {% endblock meta%}
 {% block extrahead%}
-	<link href="/static/js/lib/lightbox/css/lightbox.css" rel="stylesheet" type="text/css" />
+	<link href="//cdn.bootcss.com/lightbox2/2.8.2/css/lightbox.min.css" rel="stylesheet" type="text/css" />
 	{%  if post.editor == "html" %}
-		<link href="/static/js/lib/syntaxhighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
-		<link href="/static/js/lib/syntaxhighlighter/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+		<link href="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/styles/shCore.min.css" rel="stylesheet" type="text/css" />
+		<link href="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/styles/shThemeDefault.min.css" rel="stylesheet" type="text/css" />
 	{%  else %}
 		<link rel="stylesheet" type="text/css" href="/static/frozen/editormd/css/editormd.min.css">
-		<script type="text/javascript" src="/static/frozen/editormd/js/editormd.min.js"></script>
-		<script type="text/javascript" src="/static/frozen/editormd/lib/marked.min.js"></script>
-        <script src="/static/frozen/editormd/lib/prettify.min.js"></script>
-        <script src="/static/frozen/editormd/lib/raphael.min.js"></script>
-        <script src="/static/frozen/editormd/lib/underscore.min.js"></script>
-        <script src="/static/frozen/editormd/lib/sequence-diagram.min.js"></script>
-        <script src="/static/frozen/editormd/lib/flowchart.min.js"></script>
-        <script src="/static/frozen/editormd/lib/jquery.flowchart.min.js"></script>
-	{%  endif %}
-	<script type="text/javascript" src="/static/js/comment.js" charset="utf-8"></script>
-	<script type="text/javascript" src="/static/js/lib/lightbox/js/lightbox.min.js"></script>
-
+	{% endif %}
 {% endblock extrahead%}
 
 {% block postbody%}
@@ -149,6 +138,21 @@
 
 {% endblock postbody%}
 {% block  endscript%}
+  {%  if post.editor == "html" %}
+		<script type="text/javascript" src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shCore.min.js"></script>
+		<script type="text/javascript" src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shAutoloader.min.js"></script>
+  {%  else %}
+    <script type="text/javascript" src="/static/frozen/editormd/js/editormd.min.js"></script>
+    <script type="text/javascript" src="/static/frozen/editormd/lib/marked.min.js"></script>
+    <script src="/static/frozen/editormd/lib/prettify.min.js"></script>
+    <script src="/static/frozen/editormd/lib/raphael.min.js"></script>
+    <script src="/static/frozen/editormd/lib/underscore.min.js"></script>
+    <script src="/static/frozen/editormd/lib/sequence-diagram.min.js"></script>
+    <script src="/static/frozen/editormd/lib/flowchart.min.js"></script>
+    <script src="/static/frozen/editormd/lib/jquery.flowchart.min.js"></script>
+  {%  endif %}
+	<script type="text/javascript" src="/static/js/comment.js" charset="utf-8"></script>
+
 <script type="text/javascript">
 	$(document).ready(function(){
 		/*carrage return event*/
@@ -186,10 +190,7 @@
 	}
 </script>
 
-
 {% if post.editor == "html" %}
-	<script type="text/javascript" src="/static/js/lib/syntaxhighlighter/scripts/shCore.js"></script>
-	<script type="text/javascript" src="/static/js/lib/syntaxhighlighter/scripts/shAutoloader.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function(){
 			/*hightlight code*/
@@ -200,7 +201,7 @@
 		    var args = arguments,
 		    result = [];
 		    for(var i = 0; i < args.length; i++)
-		        result.push(args[i].replace('@', '/static/js/lib/syntaxhighlighter/scripts/'));
+		        result.push(args[i].replace('@', '//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/'));
 		    return result
 		};
 		
@@ -267,18 +268,19 @@
 	}
 
 	function markdownToHtml(){
+		  
 	    editor = editormd.markdownToHTML("content", {
 	        //htmlDecode      : true,       // 开启 HTML 标签解析，为了安全性，默认不开启
 	        htmlDecode      : "style,script,iframe",  // you can filter tags decode
 	        toc             : true,
-	        tocm            : true,    // Using [TOCM]
+	        // path            : "/static/frozen/editormd/lib",
 	        //tocContainer    : "#custom-toc-container", // 自定义 ToC 容器层
 	        //gfm             : false,
 	        //tocDropdown     : true,
 	        markdownSourceCode : false, // 是否保留 Markdown 源码，即是否删除保存源码的 Textarea 标签
 	        emoji           : true,
 	        taskList        : true,
-	        tex             : true,  // 默认不解析
+	        tex             : false,  // 默认不解析
 	        flowChart       : true,  // 默认不解析
 	        sequenceDiagram : true,  // 默认不解析
 	    });  
@@ -286,5 +288,7 @@
 
 	</script>
 {% endif %}
+  <!-- light nox in the last -->
+  <script type="text/javascript" src="//cdn.bootcss.com/lightbox2/2.8.2/js/lightbox.min.js"></script>
 {% endblock  endscript%}
 
