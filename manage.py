@@ -26,9 +26,7 @@ import config
 from optparse import OptionParser
 from random import choice
 from string import Template
-from config import update_path
 import warnings
-update_path()
 warnings.filterwarnings('ignore')
 # File settings
 file_name = 'secret_keys.py'

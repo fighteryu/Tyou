@@ -13,7 +13,6 @@ password = "password"
 database = "tyou"
 port = 3306
 mysqlhost = "localhost"
-virtualenv_path = "/var/www/Tyou/.py/bin/activate_this.py"
 
 ########
 # config based on calculations
@@ -23,11 +22,6 @@ try:
     from secret_keys import SESSION_KEY as SECRET_KEY
 except Exception:
     pass
-
-
-def update_path():
-    """update python virtual environment"""
-    execfile(virtualenv_path, dict(__file__=virtualenv_path))
 
 
 # Set upload folder to current_folder /uploads
