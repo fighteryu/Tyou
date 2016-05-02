@@ -353,3 +353,23 @@ body{
 	}
 }
 
+pre{
+	display: block;
+	  // padding: ((@line-height-computed - 1) / 2);
+	  padding: 0;
+	  margin: 0 0 (@line-height-computed / 2);
+	  font-size: (@font-size-base - 1); // 14px to 13px
+	  line-height: @line-height-base;
+	  word-break: break-all;
+	  word-wrap: break-word;
+	  color: @pre-color;
+	  // background-color: @pre-bg;
+	  // border: 1px solid @pre-border-color;
+	  border:0px;
+	  border-radius: @border-radius-base;
+	  border-left: 5px solid #558abb;
+	.hljs {
+	  background: url("/static/img/code-background.png");
+	}
+}
+
