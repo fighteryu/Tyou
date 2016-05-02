@@ -16,7 +16,7 @@
         <div class="tagcloud">
         {%for tag in g.sidebar.taglist%}
          <div class="tag">
-        <a href="/search?tagname={{tag.name|urlencode}}">
+        <a href="/search/?tagname={{tag.name|urlencode}}">
            {{tag.name}}
         </a>
         </div>
