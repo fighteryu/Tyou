@@ -28,7 +28,7 @@ def recent_feed():
     postlist = Post.get_page(0, g.config["RSS_ITEM_COUNT"], allow_visit=True)
     for post in postlist:
         if not post.need_key:
-            feed.add(post.title, post.html_content[0:300]+'......',
+            feed.add(post.title, post.html_content,
                      content_type='html',
                      author=u"博主",
                      url=make_external('page/' + quote(post.url)),
