@@ -3,19 +3,13 @@
 {%block extraadminhead%}
 	{% if editor=="html" %}
 		<script type="text/javascript" src="/static/js/lib/ckeditor/ckeditor.js"></script>
-		<script src="/static/js/admin/html.js" type="text/javascript" charset="utf-8" async defer></script>
+		<script src="/static/js/admin/html.min.js" type="text/javascript" charset="utf-8" async defer></script>
 	{% else %}
-		<link rel="stylesheet" type="text/css" href="/static/frozen/editormd/css/editormd.min.css">
-		<script src="/static/frozen/editormd/js/editormd.min.js"></script>
-		<script src="/static/frozen/editormd/lib/marked.min.js"></script>
-        <script src="/static/frozen/editormd/lib/prettify.min.js"></script>
-        <script src="/static/frozen/editormd/lib/raphael.min.js"></script>
-        <script src="/static/frozen/editormd/lib/underscore.min.js"></script>
-        <script src="/static/frozen/editormd/lib/sequence-diagram.min.js"></script>
-        <script src="/static/frozen/editormd/lib/flowchart.min.js"></script>
-        <script src="/static/frozen/editormd/lib/jquery.flowchart.min.js"></script>
-		<script src="/static/js/admin/markdown.js"></script>
-
+		<link rel="stylesheet" href="//cdn.bootcss.com/simplemde/1.10.0/simplemde.min.css">
+		<link rel="stylesheet" href="//cdn.bootcss.com/highlight.js/9.2.0/styles/github.min.css">
+		<script src="//cdn.bootcss.com/simplemde/1.10.0/simplemde.min.js"></script>
+		<script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js" async defer></script>
+		<script src="/static/js/admin/markdown.min.js" type="text/javascript" async defer></script>
 	{% endif %}
 {%endblock extraadminhead%}
 
@@ -49,7 +43,7 @@
 		</div>
 		<div class="input-group">
 			<span class="input-group-addon">密码</span>
-			<input type="text" name="password" id="password" value="{{post.password}}" class="form-control" placeholder="留空使用全局默认密码" {%if post.need_key == False%}disabled{% endif %}>
+			<input type="text" name="password" id="password" value="{% if post.password %}{{post.password}}{% endif %}" class="form-control" placeholder="留空使用全局默认密码" {%if post.need_key == False%}disabled{% endif %}>
 		</div>
 		<div class="btn-group">
 			<div class="btn-group">
@@ -98,24 +92,9 @@
 	</form>
 	<div class="row">
 		<div class="col-md-12">
-			{% if editor == "html" %}
-				<textarea id="editor" >{{ post.content }}</textarea>
-			{% else %}
-				<div class="btn-group" role="group">
-		        	<button class="btn btn-success" id="show-btn">显示编辑器</button>
-		        	<button class="btn btn-success" id="hide-btn">隐藏编辑器</button>
-		        	<button class="btn btn-success" id="get-md-btn">获取Markdown(源码)</button>
-		        	<button class="btn btn-success" id="get-html-btn">获取HTML(源码)</button>
-		        	<button class="btn btn-success" id="watch-btn">开启实时预览</button>
-		        	<button class="btn btn-success" id="unwatch-btn">关闭实时预览</button>
-		        	<button class="btn btn-success" id="fullscreen-btn">全屏(按ESC取消)</button>
-		        	<button class="btn btn-success" id="show-toolbar-btn">显示工具栏</button>
-		        	<button class="btn btn-success" id="close-toolbar-btn">关闭工具栏</button>
-		    	</div>
-		    	<div id="editor-area">
-		      		<textarea id="editor" style="display:none">{{ post.content }}</textarea>
-		     	</div>
-			{% endif %}	
+			<div class="editor-zone">
+		    <textarea id="editor">{{ post.content }}</textarea>
+		  </div>
 		</div>
 	</div>
 </div>
@@ -133,7 +112,6 @@ $(document).ready(function(){
 		}
 	});
 });
-
 
 function submitEvent(event){
 	event.preventDefault();

@@ -140,10 +140,6 @@ body{
 			max-width: 100%;
 			max-height:100%;
 		}
-		.editormd-html-preview{
-			padding:0px;
-			overflow:hidden;
-		}
 	}
 }
 
@@ -343,3 +339,17 @@ body{
 		}
 	}
 }
+/* style adjustment for simple markdown editor
+*/
+.editor-zone{
+	.CodeMirror-fullscreen{
+		top:@navbar-height + 50px;
+	}
+	.editor-toolbar.fullscreen{
+		top:@navbar-height;
+	}
+	.editor-preview-side.editor-preview-active-side{
+		top:@navbar-height + 50px;
+	}
+}
+
