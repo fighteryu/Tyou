@@ -25,7 +25,7 @@
 <script type="text/javascript" src="/static/frozen/qrcode/qrcode.min.js"></script>
 <script type="text/javascript">
 function makeQR(){
-  var text=$("#qrtext").val();
+  var text=$("#qrtext").val().trim();
   if (text==""){
     text=location.protocol+"//"+location.host;
   }
@@ -36,15 +36,13 @@ function makeQR(){
     height: 256,
     colorDark : "#000000",
     colorLight : "#eeeeee",
-    correctLevel : QRCode.CorrectLevel.H
+    correctLevel : QRCode.CorrectLevel.M
   });
 }
 $(document).ready(function(){
   makeQR();
   $("#qrtext").bind('keyup',function(e){
-      if(e.keyCode=='13'){
-      $("#qrtext").next().click();
-    }
+      makeQR();
   });
 });
 
