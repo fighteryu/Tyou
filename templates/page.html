@@ -41,7 +41,7 @@
 			<article id="content" class="content">{{ post.html_content | safe }}</article>
 		{% else %}
 			<article id="content" class="content">
-				<textarea style="display:none">{{ post.content }}</textarea>
+				<textarea style="display:none">{{ post.content | safe }}</textarea>
 			</article>
 		{% endif %}
 	{%endif%}
