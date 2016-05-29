@@ -348,7 +348,7 @@ class Comment(db.Model):
 
     @classmethod
     def get_by_id(cls, comment_id):
-        return Comment.query.filter_by(comment_id=comment_id).first()
+        return Comment.query(cls).filter_by(comment_id=comment_id).first()
 
     @classmethod
     def get_by_url(cls, url):
