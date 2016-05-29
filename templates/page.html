@@ -254,7 +254,7 @@
 	}
 
 	function markdownToHtml(){
-		var content = $("#content textarea").html();
+		var content = $("#content textarea").text();
 		$("#content").html(marked(content));
 		$('pre code').each(function(i, block) {
   		hljs.highlightBlock(block);
