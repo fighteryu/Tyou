@@ -117,7 +117,7 @@ def comment():
         post_id = usercomment["post_id"]
         refid = None
         to = None
-        if usercomment["refid"]:
+        if usercomment.get("refid", None):
             refid = int(usercomment["refid"])
             refcomment = Comment.get_by_id(refid)
             if refcomment:

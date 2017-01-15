@@ -1,8 +1,8 @@
-Flask==0.10.1
+Flask==0.11.1
 Jinja2==2.8
-SQLAlchemy==1.0.9
-SQLAlchemy-Wrapper==1.6.0
+SQLAlchemy==1.1.4
+SQLAlchemy-Wrapper==1.7.0
 Werkzeug==0.11.2
-mysqlclient==1.3.7
-markdown2==2.3.1
-gunicorn==19.4.5
+mysqlclient==1.3.9
+markdown2==2.6.7
+gunicorn==19.6.0

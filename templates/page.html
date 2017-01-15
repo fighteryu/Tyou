@@ -84,6 +84,43 @@
 {% endif%}
 
 {% if post.allow_comment%}
+<div class="bigwidget c-new" id="c-new">
+	<div id="comment-widget">
+	<form class="form-horizontal c-form" role="form">
+	  <div class="form-group">
+	    <label for="nickname" class="col-sm-2 control-label">昵称</label>
+	    <div class="col-sm-4">
+	      <input type="text" class="form-control input-sm form-inline" id="nickname" placeholder="中文、字母、数字、下划线" value="{{ session.nickname }}">
+	    </div>
+	  </div>
+	  <div class="form-group">
+	    <label for="email" class="col-sm-2 control-label">Email</label>
+	    <div class="col-sm-4">
+	      <input type="email" class="form-control input-sm form-inline" id="email" placeholder="Email不会被公开" value="{{ session.email }}">
+	    </div>
+	  </div>
+	  <div class="form-group">
+	    <label for="website" class="col-sm-2 control-label">网站</label>
+	    <div class="col-sm-4">
+	      <input type="text" class="form-control input-sm form-inline" id="website" placeholder="可选,不必输入http://" value="{{ session.website }}">
+	    </div>
+	  </div>
+	  <div class="form-group">
+	    <div class="col-sm-offset-2 col-sm-8">
+	      <div class="textarea">
+	        <textarea class="form-control" rows="5" id="newcomment" placeholder="不支持特殊标签" ></textarea>
+	      </div>
+	    </div>
+	  </div>
+	  <div class="form-group">
+	    <div class="col-sm-offset-2 col-sm-8">
+	      <button type="submit" class="btn btn-sm btn-primary" onclick="submitcomment(this);return false;">评论</button>
+	    </div>
+	  </div>
+	</form>
+	</div>
+</div>
+
 {% if commentlist%}
 <div class="bigwidget usercommentfield">
 	{% for eachcomment in commentlist%}
@@ -99,41 +136,6 @@
 </div>
 {% endif%}
 {% endif%}
-<div class="bigwidget c-new" id="c-new" style="display:none"></div>
-<div id="comment-widget" style="display:none">
-<form class="form-horizontal c-form" role="form">
-  <div class="form-group">
-    <label for="nickname" class="col-sm-2 control-label">昵称</label>
-    <div class="col-sm-4">
-      <input type="text" class="form-control input-sm form-inline" id="nickname" placeholder="中文、字母、数字、下划线" value="{{ session.nickname }}">
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="email" class="col-sm-2 control-label">Email</label>
-    <div class="col-sm-4">
-      <input type="email" class="form-control input-sm form-inline" id="email" placeholder="Email不会被公开" value="{{ session.email }}">
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="website" class="col-sm-2 control-label">网站</label>
-    <div class="col-sm-4">
-      <input type="text" class="form-control input-sm form-inline" id="website" placeholder="可选,不必输入http://" value="{{ session.website }}">
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-8">
-      <div class="textarea">
-        <textarea class="form-control" rows="5" id="newcomment" placeholder="不支持特殊标签" ></textarea>
-      </div>
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-8">
-      <button type="submit" class="btn btn-sm btn-primary" onclick="submitcomment(this);return false;">评论</button>
-    </div>
-  </div>
-</form>
-</div>
 
 {% endblock postbody%}
 {% block  endscript%}
