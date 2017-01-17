@@ -5,6 +5,8 @@
 
 # File Name: app.py
 import os
+
+import click
 from flask import Flask, g, request, jsonify, render_template, session
 
 import config
@@ -14,18 +16,18 @@ from compat import quote
 
 
 def createapp():
-    app = Flask('Tyou')
+    app = Flask(__name__)
     app.config.from_object(config)
     configure_jinja_filter(app)
     configure_modules(app)
     configure_db(app)
     configure_before_handlers(app)
     configure_errorhandlers(app)
+    register_manage_command(app)
     return app
 
 
 def configure_jinja_filter(app):
-    import urllib
 
     @app.template_filter('urlencode')
     def urlencode(uri, **query):
@@ -84,11 +86,11 @@ def configure_errorhandlers(app):
 def register_manage_command(app):
     """functions for commandline useage
     """
+    @app.cli.command()
     def backup_blog():
-        ctx = app.test_request_context()
-        ctx.push()
-        app.preprocess_request()
-
+        """
+        backup blog
+        """
         # export and write to uploads folder
         from config import UPLOAD_FOLDER
         from models import export_all
@@ -100,9 +102,24 @@ def register_manage_command(app):
         z.writestr(datetime.datetime.now().strftime("%Y%m%d%H%M.json"), data)
         z.close()
 
-        ctx.pop()
+    @app.cli.command()
+    @click.option("--username", prompt=True)
+    @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True)
+    def create_user(*args, **kwargs):
+        """
+        create user
+        """
+        User.create_user(kwargs["username"], kwargs["password"])
+        print("create user done")
 
-    app.cli_backup_blog = backup_blog
+    @app.cli.command()
+    @click.option("--username", prompt=True, confirmation_prompt=True)
+    def delete_user(*args, **kwargs):
+        """delete current user, blog posts won't be deleted
+        """
+        User.delete_user(kwargs["username"])
+        print("delete user done")
+
     return app
 
 

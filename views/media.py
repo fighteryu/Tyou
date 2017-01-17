@@ -21,44 +21,39 @@ media = Blueprint('media', __name__, template_folder="../templates")
 @media.route("/<filename>", methods=["POST", "GET", "DELETE"])
 def mediamgnt(filename=None):
     if request.method == "GET":
-        if "fileid" not in request.args:
-            abort(400)
-        else:
-            media = Media.get_by_id(request.args["fileid"])
-            if not media or media.filename != filename:
-                abort(404)
-            return send_from_directory(
-                current_app.config["UPLOAD_FOLDER"],
-                media.local_filename
-            )
+        media = Media.get_by_filename(filename)
+        if not media:
+            abort(404)
+        return send_from_directory(
+            current_app.config["UPLOAD_FOLDER"],
+            media.filename
+        )
 
     elif request.method == "POST":
         f = request.files["files[]"]
-        if f:
-            filename = f.filename
-            version = Media.get_version(filename)
-            local_filename = Media.new_local_filename(filename, version)
-            filepath = os.path.join(
-                current_app.config['UPLOAD_FOLDER'], local_filename)
-            f.save(filepath)
-            filesize = os.stat(filepath).st_size
+        if not f:
+            return
 
-            now = datetime.now()
-            hashstr = local_filename + now.strftime("%Y-%m-%d %H:%M:%S")
-            hashstr = hashstr.encode("utf8")
-            media = Media(
-                fileid=hashlib.sha256(hashstr).hexdigest(),
-                filename=filename,
-                version=Media.get_version(filename),
-                content_type=f.content_type,
-                size=filesize,
-                create_time=now,
-                display=True
-            )
+        filename = f.filename
+        filepath = os.path.join(
+            current_app.config['UPLOAD_FOLDER'], filename)
+        f.save(filepath)
+        filesize = os.stat(filepath).st_size
 
-            media.save()
-            return json.dumps(
-                {"files": []})
+        now = datetime.now()
+        media = Media(
+            fileid=hashlib.sha256(filename.encode("utf-8")).hexdigest(),
+            filename=filename,
+            version=0,
+            content_type=f.content_type,
+            size=filesize,
+            create_time=now,
+            display=True
+        )
+
+        media.save()
+        return json.dumps(
+            {"files": []})
 
     elif request.method == "DELETE":
         removelist = request.json

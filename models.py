@@ -7,9 +7,9 @@
 """
 import os
 import re
+import time
 import json
 import random
-import base64
 import hashlib
 import markdown2
 from datetime import datetime
@@ -54,15 +54,39 @@ class User(db.Model):
         return cls.query(cls).first()
 
     def validate(self, password):
-        sha512 = hashlib.sha512()
-        sha512.update(self.salt.encode("utf8"))
-        sha512.update(password.encode("utf8"))
-
-        hashed_password = base64.urlsafe_b64encode(sha512.digest())
-        return hashed_password.decode("utf8") == self.password
+        hashed_password, salt = self.generate_salt_and_hash_password(password, self.salt)
+        return hashed_password == self.password
 
     def save(self):
         db.session.add(self)
+        db.session.commit()
+
+    @classmethod
+    def generate_salt_and_hash_password(cls, password, salt=None):
+        salt = salt or str(time.time())[:20]
+        password = hashlib.sha512(password.encode("utf-8")).hexdigest()
+        password = hashlib.sha512(password.encode("utf-8") + salt.encode("utf-8")).hexdigest()
+        return password, salt
+
+    @classmethod
+    def create_user(cls, username, password):
+        users = cls.get_by_name(username)
+        if users:
+            raise Exception("{} already exists, please choose another".format(username))
+
+        # generate_password
+        password, salt = cls.generate_salt_and_hash_password(password)
+        user = cls(
+            username=username,
+            password=password,
+            salt=salt
+        )
+        user.save()
+
+    @classmethod
+    def delete_user(cls, username):
+        user = cls.get_by_name(username)
+        db.session.delete(user)
         db.session.commit()
 
 
@@ -71,7 +95,6 @@ class Post(db.Model):
     post_id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(512),  primary_key=False)
     title = db.Column(db.String(512))
-    # raw_content =content.strip_HTML_tags()
     raw_content = db.Column(db.Text)
     content = db.Column(db.Text)
     keywords = db.Column(db.String(256))
@@ -451,27 +474,12 @@ class Media(db.Model):
         return cls.query(cls).filter_by(fileid=fileid).first()
 
     @classmethod
+    def get_by_filename(cls, filename):
+        return cls.query(cls).filter_by(filename=filename).first()
+
+    @classmethod
     def get_by_fileid(cls, fileid):
         return cls.query(cls).filter_by(fileid=fileid).first()
-
-    @classmethod
-    def get_version(cls, filename):
-        media = cls.query(cls).filter_by(filename=filename).\
-            order_by(cls.create_time.desc()).first()
-
-        if media:
-            return media.version + 1
-        else:
-            return 0
-
-    @classmethod
-    def new_local_filename(cls, filename, version):
-        """for given filename ,return a filename that can be saved to disk
-            input: abc.jpg
-            output:
-
-        """
-        return "f" + str(version) + filename
 
     def filepath(self, upload_folder):
         return os.path.join(upload_folder, self.local_filename)
