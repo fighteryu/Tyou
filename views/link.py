@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # coding:utf-8
 """
-	views: link.py
-	~~~~~~~~~~~~~
+    views: link.py
+    ~~~~~~~~~~~~~
 
 """
-
-import json
-import time
-import datetime
-from flask import Blueprint, request, jsonify, g, current_app,abort
+from flask import Blueprint, request, jsonify
 from models import Link
 link = Blueprint('link', __name__, template_folder="../templates")
 
@@ -22,30 +18,27 @@ def index():
     newlink.href = link["href"]
     newlink.display = link["display"]
     newlink.description = link["description"]
-    newlink.create_time = datetime.datetime.now()
     newlink.save()
-    return jsonify(success=True,
-                   message="success")
+    return jsonify(success=True, message="success")
 
 
 @link.route("/delete", methods=['POST'])
-def mydelete():
+def delete():
     removelist = request.json
-    for item in removelist:
-        link = Link.get_by_id(item)
+    print(removelist)
+    for link_id in removelist:
+        link = Link.get_link(id=link_id)
         if link:
             link.delete()
-    return jsonify(success=True,
-                   message="success")
+    return jsonify(success=True, message="success")
 
 
 @link.route("/reverse", methods=['POST'])
 def reverse():
     reverselist = request.json
-    for item in reverselist:
-        link = Link.get_by_id(item)
+    for link_id in reverselist:
+        link = Link.get_link(link_id=link_id)
         if link:
             link.display = not link.display
             link.save()
-    return jsonify(success=True,
-                   message="success")
+    return jsonify(success=True, message="success")

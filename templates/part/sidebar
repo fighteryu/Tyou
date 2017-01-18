@@ -10,11 +10,11 @@
         </div>
     </div>
 {%endif%}
-{%if g.sidebar.taglist%}
+{%if g.sidebar.tags%}
 	<div class="tags widget">
         <strong>标签</strong>
         <div class="tagcloud">
-        {%for tag in g.sidebar.taglist%}
+        {%for tag in g.sidebar.tags%}
          <div class="tag">
         <a href="/search/?tagname={{tag.name|urlencode}}">
            {{tag.name}}
@@ -24,10 +24,10 @@
         </div>
     </div>
 {%endif%}
-{%if g.sidebar.commentlist%}
+{%if g.sidebar.comments%}
     <div class="comments widget">
         <strong>最近评论</strong>
-        {%for item in g.sidebar.commentlist%}
+        {%for item in g.sidebar.comments%}
         <div class="c-list">
             <div class="c-meta">
                 <i class="c-nickname">{{item.nickname}}</i> 在
@@ -39,12 +39,12 @@
 
     </div>
 {%endif%}
-{%if g.sidebar.linklist%}
+{%if g.sidebar.links%}
     <div class="links widget">
         <strong>链接</strong>
         <div id="linkfield">
             <ul>
-            {%for link in g.sidebar.linklist%}
+            {%for link in g.sidebar.links%}
             <li><a href="{{link.href}}">{{link.name}}</a></li>
             {%endfor%}
             </ul>

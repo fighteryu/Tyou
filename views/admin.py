@@ -17,9 +17,9 @@ from decorators import admin_required
 adminor = Blueprint('admin', __name__, template_folder="../templates")
 
 
-@adminor.route("/postlist")
+@adminor.route("/posts")
 @admin_required
-def adminpostlist():
+def posts():
     perpage = g.config["ADMIN_ITEM_COUNT"]
     args = request.args
 
@@ -41,12 +41,12 @@ def adminpostlist():
     elif "allow_comment" in args and args["allow_comment"] == "false":
         kargs["allow_comment"] = False
 
-    postlist = Post.get_page(offset=(page-1)*perpage, limit=perpage, **kargs)
+    postlist = Post.get_page(page, **kargs)
 
     pager = gen_pager(page, Post.count(**kargs), perpage, request.url)
-    return render_template('admin/postlist.html',
+    return render_template('admin/posts.html',
                            postlist=postlist,
-                           admin_url="pagelist",
+                           admin_url="posts",
                            pager=pager,
                            parameter=request.query_string)
 
@@ -60,15 +60,13 @@ def pageinplace():
     post_id = request.args.get("post_id", "")
     if post_id.isdigit():
         post_id = int(post_id)
-    post = Post.get_by_url(url=url)
+    post = Post.get_post(url=url)
 
     # same post or the post doesn't exist
     if (post and post.post_id == post_id) or (not post):
-        return jsonify(success=True,
-                       in_place=False)
+        return jsonify(success=True, in_place=False)
     else:
-        return jsonify(success=True,
-                       in_place=True)
+        return jsonify(success=True, in_place=True)
 
 
 @adminor.route("/post", methods=["GET", "POST", "DELETE"])
@@ -82,7 +80,7 @@ def editpost(post_id=None):
     """
     if request.method == "GET":
         if post_id is not None:
-            post = Post.get_by_id(post_id=post_id, public_only=False)
+            post = Post.get_post(id=post_id)
             editor = post.editor
             if not post:
                 abort(404)
@@ -98,9 +96,7 @@ def editpost(post_id=None):
         data = request.json
         now_time = datetime.now()
         if data['post_id'] is not None:
-            post = Post.get_by_id(
-                post_id=int(data["post_id"]),
-                public_only=False)
+            post = Post.get_post(id=int(data["post_id"]))
         else:
             post = Post()
             post.create_time = now_time
@@ -119,20 +115,19 @@ def editpost(post_id=None):
         post.need_key = data.get("need_key", False)
         post.password = data.get("password", "")
         post.save()
-        return jsonify(success=True,
-                       post_id=post.post_id)
+        return jsonify(success=True, post_id=post.id)
 
     elif request.method == "DELETE":
         # Delete post by id
         if post_id is not None:
-            post = Post.get_by_id(int(post_id), public_only=False)
+            post = Post.get_post(id=int(post_id))
             if post:
                 post.delete()
         # Batch Delete method
         else:
             removelist = request.json
             for post_id in removelist:
-                post = Post.get_by_id(post_id=int(post_id), public_only=False)
+                post = Post.get_post(id=post_id)
                 if post:
                     post.delete()
         return jsonify(success=True)
@@ -141,25 +136,23 @@ def editpost(post_id=None):
 @adminor.route('/overview/<int:post_id>/')
 @admin_required
 def overview(post_id=-1):
-    post = Post.get_by_id(post_id=post_id, public_only=False)
+    post = Post.get_post(id=post_id)
     if post:
-        return render_template('page.html',
-                               admin_url="overview",
-                               post=post)
+        return render_template('page.html', admin_url="overview", post=post)
     else:
         abort(404)
 
 
-@adminor.route("/linkmgnt")
+@adminor.route("/links")
 @admin_required
-def linkmgnt():
+def links():
     perpage = g.config["ADMIN_ITEM_COUNT"]
     page = int(request.args.get("page", 1))
-    linklist = Link.get_page(offset=perpage*(page-1), limit=perpage)
+    linklist = Link.get_page(page)
     pager = gen_pager(page, Link.count(), perpage, request.url)
-    return render_template('admin/linkmgnt.html',
+    return render_template('admin/links.html',
                            linklist=linklist,
-                           admin_url="linkmgnt",
+                           admin_url="links",
                            pager=pager
                            )
 
@@ -189,47 +182,42 @@ def setting():
         if not new_config["BLOGURL"].endswith("/"):
             new_config["BLOGURL"] += "/"
 
-        user = User.get_one()
+        user = User.get_users().first()
         user.config = json.dumps(new_config)
         user.save()
         return redirect(url_for("admin.setting"))
 
 
-@adminor.route('/mediamgnt', methods=['GET'])
+@adminor.route('/medias', methods=['GET'])
 @admin_required
-def mediamgnt():
+def medias():
     page = int(request.args.get("page", 1))
     perpage = g.config["ADMIN_ITEM_COUNT"]
-    medialist = Media.get_page(perpage * (page-1), perpage)
+    medialist = Media.get_page(page)
     pager = gen_pager(page, Media.count(), perpage, request.url)
-    return render_template('admin/mediamgnt.html',
-                           admin_url="mediamgnt",
+    return render_template('admin/medias.html',
+                           admin_url="medias",
                            medialist=medialist,
                            pager=pager
                            )
 
 
-@adminor.route('/commentmgnt', methods=["GET"])
+@adminor.route('/comments', methods=["GET"])
 @admin_required
-def commentmgnt():
+def comments():
     if request.method == "GET":
         page = int(request.args.get("page", 1))
         perpage = g.config["ADMIN_ITEM_COUNT"]
         if 'post_id' in request.args:
             post_id = request.args['post_id']
-            commentlist = Comment.get_page(
-                offset=perpage*(page-1),
-                limit=perpage,
-                post_id=post_id)
+            comments = Comment.get_page(page, post_id=post_id)
             pager = gen_pager(page, Comment.count(post_id), perpage, request.url)
         else:
-            commentlist = Comment.get_page(
-                offset=perpage*(page-1),
-                limit=perpage)
+            comments = Comment.get_page(page)
             pager = gen_pager(page, Comment.count(), perpage, request.url)
-        return render_template('admin/commentmgnt.html',
-                               commentlist=commentlist,
-                               admin_url="commentmgnt",
+        return render_template('admin/comments.html',
+                               comments=comments,
+                               admin_url="comments",
                                pager=pager)
 
 
@@ -262,7 +250,7 @@ def import_blog():
         posts = data.pop("posts", [])
 
         for link in links:
-            new_link = Link.get_by_href(link["href"])
+            new_link = Link.get_link(href=link["href"])
             if new_link:
                 continue
             else:
@@ -276,7 +264,7 @@ def import_blog():
             new_link.save()
 
         for media in medias:
-            new_media = Media.get_by_fileid(media["fileid"])
+            new_media = Media.get_media(fileid=media["fileid"])
             if new_media:
                 continue
             else:
@@ -293,7 +281,7 @@ def import_blog():
 
         for post in posts:
             # If posts exist, continue
-            new_post = Post.get_by_url(post["url"], public_only=False)
+            new_post = Post.get_post(url=post["url"])
             if new_post:
                 continue
             else:
@@ -301,7 +289,7 @@ def import_blog():
 
             for item in post:
                 new_post.__dict__[item] = post[item]
-            new_post.post_id = None
+            new_post.id = None
             new_post.create_time = \
                 datetime.fromtimestamp(new_post.create_time)
             new_post.update_time = \
@@ -319,7 +307,7 @@ def import_blog():
                 new_comment = Comment()
                 for item in comment:
                     new_comment.__dict__[item] = comment[item]
-                new_comment.post_id = new_post.post_id
+                new_comment.post_id = new_post.id
                 new_comment.comment_id = None
                 new_comment.create_time = \
                     datetime.fromtimestamp(new_comment.create_time)

@@ -20,14 +20,14 @@
 		{% for post in postlist %}
 		<tr>
 			<th>
-				<input class="page" type="checkbox" value="on" name="{{ post.post_id }}">
+				<input class="page" type="checkbox" value="on" name="{{ post.id }}">
 			</th>
 			<td>
 				<div class="time">{{ post.create_time.strftime("%Y-%m-%d %H:%M") }}</div>
 			</td>
 			<td>
-				<a href="/admin/post/{{ post.post_id }}">[编辑]</a>
-				<a href="/admin/overview/{{ post.post_id }}">[预览]</a>
+				<a href="/admin/post/{{ post.id }}">[编辑]</a>
+				<a href="/admin/overview/{{ post.id }}">[预览]</a>
 				<a href="/page/{{ post.url }}">{{ post.title }}</a>
 			</td>
 			{% if post.is_original %}

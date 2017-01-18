@@ -16,12 +16,26 @@ from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
+from flask.globals import current_app
 
 
 db = SQLAlchemy()
 
 
-class User(db.Model):
+class ModelMixin():
+    @classmethod
+    def get_page(cls, page, **kwargs):
+        offset = current_app.config["PER_PAGE"] * (page - 1)
+        return cls.query.filter_by(**kwargs).offset(offset).limit(current_app.config["PER_PAGE"])
+
+    def save(self):
+        db.session.add(self)
+
+    def delete(self):
+        db.session.delete(self)
+
+
+class User(ModelMixin, db.Model):
 
     """setting = {
     page
@@ -30,11 +44,12 @@ class User(db.Model):
 
     __tablename__ = "user"
 
-    # id = db.Column(Integer, primary=True)
-    username = db.Column(db.String(20), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), index=True)
     password = db.Column(db.String(256))
     salt = db.Column(db.String(20))
     config = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @classmethod
     def get_config(cls):
@@ -43,21 +58,9 @@ class User(db.Model):
             return json.loads(user.config)
         return None
 
-    @classmethod
-    def get_by_name(cls, username):
-        return cls.query.filter_by(username=username).first()
-
-    @classmethod
-    def get_one(cls):
-        return cls.query.first()
-
     def validate(self, password):
         hashed_password, salt = self.generate_salt_and_hash_password(password, self.salt)
         return hashed_password == self.password
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
 
     @classmethod
     def generate_salt_and_hash_password(cls, password, salt=None):
@@ -68,7 +71,7 @@ class User(db.Model):
 
     @classmethod
     def create_user(cls, username, password):
-        users = cls.get_by_name(username)
+        users = cls.get_user(username=username)
         if users:
             raise Exception("{} already exists, please choose another".format(username))
 
@@ -83,59 +86,73 @@ class User(db.Model):
 
     @classmethod
     def delete_user(cls, username):
-        user = cls.get_by_name(username)
+        user = cls.get_user(username=username)
         db.session.delete(user)
         db.session.commit()
 
+    @classmethod
+    def get_user(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).one_or_none()
 
-class Post(db.Model):
+    @classmethod
+    def get_users(cls, **kwargs):
+        return cls.query.filter_by(**kwargs)
+
+
+class Post(ModelMixin, db.Model):
     __tablename__ = "post"
-    post_id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(512),  primary_key=False)
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(512), unique=True)
     title = db.Column(db.String(512))
     raw_content = db.Column(db.Text)
     content = db.Column(db.Text)
-    keywords = db.Column(db.String(256))
-    metacontent = db.Column(db.String(256))
-    create_time = db.Column(db.DateTime)
-    update_time = db.Column(db.DateTime)
+    keywords = db.Column(db.String(256), default="")
+    metacontent = db.Column(db.String(256), default="")
+    create_time = db.Column(db.DateTime, default=datetime.now)
+    update_time = db.Column(db.DateTime, default=datetime.now)
     # required if need_key is True
     password = db.Column(db.String(20), default="")
     # tag seperated by comma
-    tags = db.Column(db.String(256))
+    tags = db.Column(db.String(256), default="")
     # editor html or markdown
     editor = db.Column(db.String(10))
-    allow_visit = db.Column(db.Boolean)
-    allow_comment = db.Column(db.Boolean)
-    need_key = db.Column(db.Boolean)
-    is_original = db.Column(db.Boolean)
-    num_lookup = db.Column(db.Integer)
+    allow_visit = db.Column(db.Boolean, default=True)
+    allow_comment = db.Column(db.Boolean, default=True)
+    need_key = db.Column(db.Boolean, default=True)
+    is_original = db.Column(db.Boolean, default=True)
+    num_lookup = db.Column(db.Integer, default=0)
 
-    def __init__(self):
-        """setup default value
-        """
-        self.url = ""
-        self.title = ""
-        self.content = ""
-        self.keywords = ""
-        self.metacontent = ""
-        self.tags = ""
-        self.allow_visit = False
-        self.allow_comment = True
-        self.need_key = False
-        self.is_original = True
-        self.num_lookup = 0
+    def __init__(self, **kwargs):
+        defaults = {
+            "url": "",
+            "title": "",
+            "raw_content": "",
+            "content": "",
+            "keywords": "",
+            "metacontent": "",
+            "password": "",
+            "tags": "",
+            "editor": "markdown",
+            "allow_visit": True,
+            "allow_comment": True,
+            "need_key": False,
+            "is_original": True,
+            "num_lookup": False
+        }
+
+        for key, value in kwargs.items():
+            defaults.set_default(key, value)
+
+        for key, value in defaults.items():
+            setattr(self, key, value)
 
     @classmethod
-    def get_page(cls, offset, limit, **kargs):
-        """If pubic_only == False , return posts even if allow_visit = False
-        """
-        query = cls.query
-        for key in kargs:
-            query = query.filter(cls.__dict__[key] == kargs[key])
+    def get_post(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).one_or_none()
 
-        query = query.order_by(cls.post_id.desc())
-        return query.limit(limit).offset(offset).all()
+    @classmethod
+    def get_posts(cls, **kwargs):
+        return cls.query.filter_by(**kwargs)
 
     @classmethod
     def count(cls, **kargs):
@@ -143,22 +160,6 @@ class Post(db.Model):
         for key in kargs:
             query = query.filter(cls.__dict__[key] == kargs[key])
         return query.count()
-
-    @classmethod
-    def get_by_id(cls, post_id, public_only=True):
-        if public_only is True:
-            return cls.query.filter_by(
-                allow_visit=True, post_id=post_id).first()
-        else:
-            return cls.query.filter_by(
-                post_id=post_id).first()
-
-    @classmethod
-    def get_by_url(cls, url, public_only=True):
-        if public_only is True:
-            return cls.query.filter_by(url=url, allow_visit=True).first()
-        else:
-            return cls.query.filter_by(url=url).first()
 
     @classmethod
     def tag_search(cls, keyword, offset, limit):
@@ -226,9 +227,9 @@ class Post(db.Model):
         return post[0]
 
     def get_tags(self):
-        taglist = self.tags.split(",")
-        taglist = [tag for tag in taglist if tag]
-        return taglist
+        tags = self.tags.split(",")
+        tags = [tag for tag in tags if tag]
+        return tags
 
     def to_tags(self, taglist):
         tags = ",".join(taglist)
@@ -249,7 +250,7 @@ class Post(db.Model):
             return self.raw_content
 
     def update_tags(self, new_string):
-        """ Post.tags is a string in which multi tags are seperated by ",", we
+        """ Post.tags is a string in which tags are seperated by ",", we
         will seperate them and save to database. Use this method when you want
         to update or create a post
         Input:
@@ -282,13 +283,9 @@ class Post(db.Model):
         return self.update_tags("")
 
     def delete_comments(self):
-        commentlist = Comment.get_by_post_id(self.post_id)
-        for comment in commentlist:
+        comments = Comment.get_comments(post_id=self.id)
+        for comment in comments:
             comment.delete()
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
 
     def delete(self):
         self.delete_tags()
@@ -297,121 +294,78 @@ class Post(db.Model):
         db.session.commit()
 
 
-class Tag(db.Model):
+class Tag(ModelMixin, db.Model):
     __tablename__ = "tag"
 
-    name = db.Column(db.String(64), primary_key=True)
-    count = db.Column(db.Integer)
-
-    def __init__(self, name, count=1):
-        self.name = name
-        self.count = count
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    count = db.Column(db.Integer, default=1)
 
     @classmethod
-    def get_one(cls, name):
-        return cls.query.filter_by(name=name).first()
+    def get_tag(self, **kwargs):
+        return Tag.query.filter_by(**kwargs).one_or_none()
 
     @classmethod
-    def add(cls, taglist):
+    def get_tags(self, **kwargs):
+        return Tag.query.filter_by(**kwargs)
+
+    @classmethod
+    def add(cls, tags):
         """never use this method directly , use Post.update_tags instead
         """
-        for item in taglist:
-            if item:
-                tag = Tag.get_one(item)
+        for tag_name in tags:
+            if tag_name:
+                tag = Tag.get_tag(name=tag_name)
                 if tag:
                     tag.count += 1
                     # items in uppercase and lowercase are treated as one tag.
                     # update name to get the most recent version
-                    tag.name = item
+                    tag.name = tag_name
                 else:
-                    tag = Tag(name=item)
+                    tag = Tag(name=tag_name)
                     db.session.add(tag)
-        db.session.commit()
 
     @classmethod
-    def minus(cls, taglist):
-        for item in taglist:
-            tag = Tag.get_one(item)
+    def minus(cls, tags):
+        for tag_name in tags:
+            tag = Tag.get_tag(name=tag_name)
             if tag:
                 if tag.count > 1:
                     tag.count -= 1
                 else:
                     db.session.delete(tag)
 
-        db.session.commit()
 
-    @classmethod
-    def get_first_X(cls, count):
-        return cls.query.order_by(cls.count.desc()).limit(count).all()
-
-
-class Comment(db.Model):
+class Comment(ModelMixin, db.Model):
     __tablename__ = "comment"
-    comment_id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer)
-    url = db.Column(db.String(64))
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     email = db.Column(db.String(64))
     nickname = db.Column(db.String(20))
     content = db.Column(db.String(1024))
-    refid = db.Column(db.Integer)
+    refid = db.Column(db.Integer, db.ForeignKey('comment.id'))
     to = db.Column(db.String(20))
-    create_time = db.Column(db.DateTime)
+    create_time = db.Column(db.DateTime, default=datetime.now)
     ip = db.Column(db.String(64))
     website = db.Column(db.String(64))
 
     @classmethod
-    def get_by_post_id(cls, post_id):
-        result = cls.query.filter_by(post_id=post_id).all()
-        for i in range(len(result)):
-            result[i].content = result[i].content.replace(" ", "&nbsp;")
-            result[i].content = result[i].content.replace("\n", "<br>")
-        return result
+    def count(cls):
+        return cls.query.count()
 
     @classmethod
-    def get_by_id(cls, comment_id):
-        return Comment.query.filter_by(comment_id=comment_id).first()
+    def get_comment(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).one_or_none()
 
     @classmethod
-    def get_by_url(cls, url):
-        post = Post.get_by_url(url)
-        if post:
-            return cls.get_by_post_id(post.post_id)
-        else:
-            return None
-
-    @classmethod
-    def count(cls, post_id=None):
-        if post_id is None:
-            return cls.query.count()
-        else:
-            return cls.query.filter_by(post_id=post_id).count()
-
-    @classmethod
-    def get_last_X(cls, count):
-        return cls.query.order_by(cls.comment_id.desc()).limit(count).all()
-
-    @classmethod
-    def get_page(cls, offset, limit, post_id=-1):
-        if post_id == -1:
-            commentlist = cls.query.order_by(cls.comment_id.desc()).\
-                offset(offset).limit(limit).all()
-        else:
-            commentlist = cls.query.order_by(cls.comment_id.desc()).\
-                filter_by(post_id=post_id).offset(offset).limit(limit).all()
-        return commentlist
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
+    def get_comments(cls, **kwargs):
+        return cls.query.filter_by(**kwargs)
 
 
-class Link(db.Model):
+class Link(ModelMixin, db.Model):
     __tablename__ = "link"
-    link_id = db.Column(db.Integer, primary_key=True)
+
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     href = db.Column(db.String(1024))
     description = db.Column(db.String(64))
@@ -419,35 +373,19 @@ class Link(db.Model):
     display = db.Column(db.Boolean)
 
     @classmethod
+    def get_link(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).one_or_none()
+
+    @classmethod
+    def get_links(cls, **kwargs):
+        return cls.query.filter_by(**kwargs)
+
+    @classmethod
     def count(cls):
         return cls.query.count()
 
-    @classmethod
-    def get_page(cls, offset, limit):
-        return cls.query.offset(offset).limit(limit).all()
 
-    @classmethod
-    def get_X(cls, limit):
-        return cls.query.filter_by(display=True).limit(limit).all()
-
-    @classmethod
-    def get_by_id(cls, link_id):
-        return cls.query.filter_by(link_id=int(link_id)).first()
-
-    @classmethod
-    def get_by_href(cls, href):
-        return cls.query.filter_by(href=href).first()
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
-
-class Media(db.Model):
+class Media(ModelMixin, db.Model):
     fileid = db.Column(db.String(64), primary_key=True)
     filename = db.Column(db.String(64))
     # For a give filename , there could be multi file exits
@@ -458,26 +396,12 @@ class Media(db.Model):
     display = db.Column(db.Boolean)
 
     @classmethod
-    def count(cls):
-        return cls.query.count()
+    def get_media(cls, **kwargs):
+        return cls.query.filter_by(**kwargs).one_or_none()
 
     @classmethod
-    def get_page(cls, offset, limit):
-        medialist = cls.query.order_by(cls.create_time.desc()).\
-            offset(offset).limit(limit).all()
-        return medialist
-
-    @classmethod
-    def get_by_id(cls, fileid):
-        return cls.query.filter_by(fileid=fileid).first()
-
-    @classmethod
-    def get_by_filename(cls, filename):
-        return cls.query.filter_by(filename=filename).first()
-
-    @classmethod
-    def get_by_fileid(cls, fileid):
-        return cls.query.filter_by(fileid=fileid).first()
+    def get_medias(cls, **kwargs):
+        return cls.query.filter_by(**kwargs)
 
     def filepath(self, upload_folder):
         return os.path.join(upload_folder, self.local_filename)
@@ -486,9 +410,9 @@ class Media(db.Model):
     def local_filename(self):
         return "f"+str(self.version)+self.filename
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
+    @classmethod
+    def count(cls):
+        return cls.query.count()
 
     def delete(self):
         import config
@@ -557,14 +481,14 @@ def gen_sidebar(config):
         "linklist": None
     }
 
-    taglist = Tag.get_first_X(config["TAG_COUNT"])
-    rr["taglist"] = taglist
-    commentlist = Comment.get_last_X(config["COMMENT_COUNT"])
-    rr["commentlist"] = commentlist
-    linklist = Link.get_X(config["LINK_COUNT"])
-    rr["linklist"] = linklist
+    tags = Tag.get_tags().order_by(Tag.count.desc()).limit(config["TAG_COUNT"])
+    rr["tasg"] = tags
+    comments = Comment.get_comments().order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
+    rr["comments"] = comments
+    links = Link.get_links().order_by(Link.id.desc()).limit(config["LINK_COUNT"])
+    rr["links"] = links
 
-    announce = Post.get_by_id(config["ANNOUNCE_ID"])
+    announce = Post.get_post(id=config["ANNOUNCE_ID"])
     rr["announce"] = announce
     rr["announce_length"] = config["ANNOUNCE_LENGTH"]
     return rr
@@ -580,12 +504,11 @@ def export_all():
     for post in postlist:
         # Back up all comments
         ex_comment = []
-        commentlist = Comment.get_by_post_id(post.post_id)
+        commentlist = Comment.get_comments(post_id=post.id)
         for comment in commentlist:
             ex_comment.append({
-                "comment_id": comment.comment_id,
+                "id": comment.id,
                 "post_id": comment.post_id,
-                "url": comment.url,
                 "email": comment.email,
                 "nickname": comment.nickname,
                 "content": comment.content,
@@ -597,7 +520,7 @@ def export_all():
             })
 
         ex_post.append({
-            "post_id": post.post_id,
+            "id": post.id,
             "url": post.url,
             "title": post.title,
             "content": post.content,

@@ -5,9 +5,7 @@
     ~~~~~~~~~~~~~
 
 """
-import json
 import random
-from datetime import datetime
 
 from flask import request, jsonify, g, abort, render_template,\
     flash, redirect, url_for, session
@@ -22,8 +20,7 @@ from compat import unquote
 @frontend.route("/index")
 def index():
     page = int(request.args.get("page", 1))
-    offset = g.config["PER_PAGE"]*(page - 1)
-    postlist = Post.get_page(offset, g.config["PER_PAGE"], allow_visit=True)
+    postlist = Post.get_page(page, allow_visit=True)
     pager = gen_pager(page, Post.count(allow_visit=True), g.config["PER_PAGE"],
                       request.url)
     if postlist or page == 1:
@@ -39,14 +36,14 @@ def index():
 @frontend.route('/page/<url>')
 def page(url=None):
     """display post"""
-    post = Post.get_by_url(url=url, public_only=False)
+    post = Post.get_post(url=url)
     if post and post.allow_visit:
-        commentlist = Comment.get_by_post_id(post.post_id)
+        comments = Comment.get_comments(post_id=post.id).order_by(Comment.id.desc())
         return render_template(
             'page.html',
             blogname=g.config["BLOGNAME"],
             post=post,
-            commentlist=commentlist)
+            comments=comments)
     else:
         abort(404)
 
@@ -55,7 +52,7 @@ def page(url=None):
 @frontend.route("/key/", methods=["POST"])
 def key():
     data = request.json
-    post = Post.get_by_url(url=data.get("posturl", ""), public_only=False)
+    post = Post.get_post(url=data.get("posturl", ""))
     if not post:
         return jsonify(
             validate=False,
@@ -102,8 +99,8 @@ def comment():
         if not session.get("is_admin", False):
             abort(401)
         removelist = request.json
-        for item in removelist:
-            comment = Comment.get_by_id(int(item))
+        for comment_id in removelist:
+            comment = Comment.get_comment(id=comment_id)
             if comment:
                 comment.delete()
         return jsonify(success=True,
@@ -119,23 +116,21 @@ def comment():
         to = None
         if usercomment.get("refid", None):
             refid = int(usercomment["refid"])
-            refcomment = Comment.get_by_id(refid)
+            refcomment = Comment.get_comment(refid=refid)
             if refcomment:
                 to = refcomment.nickname
-        post = Post.query.filter_by(post_id=int(post_id)).first()
+        post = Post.query.filter_by(id=post_id).first()
         if not post or post.allow_visit is False:
-            return json.dumps({'has_error': True, "message": "文章不存在"})
+            return jsonify(has_error=True, message="文章不存在")
         elif post.allow_comment is False:
-            return json.dumps({"has_error": True, "message": "不允许评论"})
+            return jsonify(has_error=True, message="不允许评论")
         comment = Comment(
-            post_id=post.post_id,
-            url=post.url,
+            post_id=post.id,
             email=email,
             nickname=nickname,
             content=unquote(content),
             to=to,
             refid=refid,
-            create_time=datetime.now(),
             ip=request.remote_addr,
             website=website)
         comment.save()
@@ -163,7 +158,7 @@ def login():
             flash("用户名密码错误")
             return redirect(url_for('.login'))
 
-        user = User.get_by_name(username.split()[0])
+        user = User.get_user(username=username.split()[0])
         if not user or not user.validate(password):
             flash("用户名密码错误")
             return redirect(url_for('.login'))

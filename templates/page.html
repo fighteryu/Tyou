@@ -16,7 +16,7 @@
 
 {% block postbody%}
 <form>
-	<input type="hidden" id="post_id" name="post_id" value="{{ post.post_id }}">
+	<input type="hidden" id="post_id" name="post_id" value="{{ post.id }}">
 </form>
 <div class="bigwidget">
 	<header>
@@ -73,7 +73,7 @@
 	{% endfor%}	
 	</div>
 	<div class="operation">
-		{% if post.allow_comment%}操作: <a class="c-quote" href="#c-new">评论</a> {% endif%}{% if session.is_admin%} | <a href="/admin/post/{{ post.post_id }}">编辑</a>{% endif%} 
+		{% if post.allow_comment%}操作: <a class="c-quote" href="#c-new">评论</a> {% endif%}{% if session.is_admin%} | <a href="/admin/post/{{ post.id }}">编辑</a>{% endif%} 
 	</div>
 </div>
 {% if post.is_original%}
@@ -121,9 +121,9 @@
 	</div>
 </div>
 
-{% if commentlist%}
+{% if comments%}
 <div class="bigwidget usercommentfield">
-	{% for eachcomment in commentlist%}
+	{% for eachcomment in comments%}
 	<div class="c-list">
 		<div class="c-meta">
 			<i class="c-nickname">{{ eachcomment.nickname }}</i> {% if eachcomment.to%}回复 <i>{{ eachcomment.to }}</i> {% endif%}<span class="c-time">{{ eachcomment.create_time.strftime("%Y-%m-%d %H:%M") }}</span>

@@ -17,10 +17,10 @@
 		</tr>
 	</thead>
 	<tbody>
-		{% for comment in commentlist %}
+		{% for comment in comments %}
 		<tr>
 			<td>
-				<input class="page" type="checkbox" value="on" name="{{ comment.comment_id }}">
+				<input class="page" type="checkbox" value="on" name="{{ comment.id }}">
 			</td>
 			<td>
 				<a href="mailto:{{ comment.email }}">{{ comment.nickname }}</a>

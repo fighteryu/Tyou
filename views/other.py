@@ -25,7 +25,7 @@ def make_external(url):
 def recent_feed():
     feed = AtomFeed(g.config["BLOGNAME"],
                     feed_url=request.url, url=request.url_root)
-    postlist = Post.get_page(0, g.config["RSS_ITEM_COUNT"], allow_visit=True)
+    postlist = Post.get_posts(allow_visit=True)
     for post in postlist:
         if not post.need_key:
             feed.add(post.title, post.html_content,

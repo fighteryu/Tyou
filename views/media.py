@@ -19,9 +19,9 @@ media = Blueprint('media', __name__, template_folder="../templates")
 
 @media.route("", methods=["POST", "GET", "DELETE"])
 @media.route("/<filename>", methods=["POST", "GET", "DELETE"])
-def mediamgnt(filename=None):
+def medias(filename=None):
     if request.method == "GET":
-        media = Media.get_by_filename(filename)
+        media = Media.get_media(filename=filename)
         if not media:
             abort(404)
         return send_from_directory(
@@ -60,7 +60,7 @@ def mediamgnt(filename=None):
         for eachfile in removelist:
             fileid = eachfile["fileid"]
             filename = eachfile["filename"]
-            onemedia = Media.get_by_id(fileid)
+            onemedia = Media.get_media(fileid=fileid)
             if onemedia.filename != filename:
                 continue
             onemedia.delete()
@@ -73,7 +73,7 @@ def mediamgnt(filename=None):
 def reverse():
     reverselist = request.json
     for item in reverselist:
-        media = Media.get_by_id(item["fileid"])
+        media = Media.get_media(fileid=item["fileid"])
         if media:
             media.display = not media.display
             media.save()
