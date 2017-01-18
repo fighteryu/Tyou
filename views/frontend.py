@@ -122,7 +122,7 @@ def comment():
             refcomment = Comment.get_by_id(refid)
             if refcomment:
                 to = refcomment.nickname
-        post = Post.query(Post).filter_by(post_id=int(post_id)).first()
+        post = Post.query.filter_by(post_id=int(post_id)).first()
         if not post or post.allow_visit is False:
             return json.dumps({'has_error': True, "message": "文章不存在"})
         elif post.allow_comment is False:

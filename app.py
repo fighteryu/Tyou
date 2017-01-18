@@ -41,9 +41,7 @@ def configure_modules(app):
 
 
 def configure_db(app):
-    @app.before_first_request
-    def create_database():
-        db.create_all()
+    db.init_app(app)
 
     @app.teardown_appcontext
     def shutdown_sesion(exception=None):

@@ -14,14 +14,11 @@ import hashlib
 import markdown2
 from datetime import datetime
 
-from sqlalchemy_wrapper import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 
-import config
 
-
-db = SQLAlchemy(config.SQLALCHEMY_DATABASE_URI,
-                pool_recycle=config.SQLALCHEMY_POOL_RECYCLE)
+db = SQLAlchemy()
 
 
 class User(db.Model):
@@ -33,6 +30,7 @@ class User(db.Model):
 
     __tablename__ = "user"
 
+    # id = db.Column(Integer, primary=True)
     username = db.Column(db.String(20), primary_key=True)
     password = db.Column(db.String(256))
     salt = db.Column(db.String(20))
@@ -40,18 +38,18 @@ class User(db.Model):
 
     @classmethod
     def get_config(cls):
-        user = cls.query(cls).first()
+        user = cls.query.first()
         if user and user.config:
             return json.loads(user.config)
         return None
 
     @classmethod
     def get_by_name(cls, username):
-        return cls.query(cls).filter_by(username=username).first()
+        return cls.query.filter_by(username=username).first()
 
     @classmethod
     def get_one(cls):
-        return cls.query(cls).first()
+        return cls.query.first()
 
     def validate(self, password):
         hashed_password, salt = self.generate_salt_and_hash_password(password, self.salt)
@@ -132,7 +130,7 @@ class Post(db.Model):
     def get_page(cls, offset, limit, **kargs):
         """If pubic_only == False , return posts even if allow_visit = False
         """
-        query = cls.query(cls)
+        query = cls.query
         for key in kargs:
             query = query.filter(cls.__dict__[key] == kargs[key])
 
@@ -141,7 +139,7 @@ class Post(db.Model):
 
     @classmethod
     def count(cls, **kargs):
-        query = cls.query(cls)
+        query = cls.query
         for key in kargs:
             query = query.filter(cls.__dict__[key] == kargs[key])
         return query.count()
@@ -149,24 +147,24 @@ class Post(db.Model):
     @classmethod
     def get_by_id(cls, post_id, public_only=True):
         if public_only is True:
-            return cls.query(cls).filter_by(
+            return cls.query.filter_by(
                 allow_visit=True, post_id=post_id).first()
         else:
-            return cls.query(cls).filter_by(
+            return cls.query.filter_by(
                 post_id=post_id).first()
 
     @classmethod
     def get_by_url(cls, url, public_only=True):
         if public_only is True:
-            return cls.query(cls).filter_by(url=url, allow_visit=True).first()
+            return cls.query.filter_by(url=url, allow_visit=True).first()
         else:
-            return cls.query(cls).filter_by(url=url).first()
+            return cls.query.filter_by(url=url).first()
 
     @classmethod
     def tag_search(cls, keyword, offset, limit):
         if not keyword:
             return []
-        return cls.query(cls).filter_by(allow_visit=True).\
+        return cls.query.filter_by(allow_visit=True).\
             filter(cls.tags.like("%,"+keyword+",%")).\
             order_by(cls.post_id.desc()).offset(offset).limit(limit).all()
 
@@ -174,14 +172,14 @@ class Post(db.Model):
     def tag_search_count(cls, keyword):
         if not keyword:
             return 0
-        return cls.query(cls).filter_by(allow_visit=True).\
+        return cls.query.filter_by(allow_visit=True).\
             filter(cls.tags.like("%,"+keyword+",%")).count()
 
     @classmethod
     def text_search(cls, words, offset, limit):
         if len(words) == 0 or len(words) > 5:
             return []
-        query = cls.query(cls).filter_by(allow_visit=True)
+        query = cls.query.filter_by(allow_visit=True)
         for word in words:
             query = query.filter(or_(
                 cls.raw_content.like("%" + word + "%"),
@@ -194,7 +192,7 @@ class Post(db.Model):
     def text_search_count(cls, words):
         if len(words) == 0 or len(words) > 5:
             return 0
-        query = cls.query(cls).filter_by(allow_visit=True)
+        query = cls.query.filter_by(allow_visit=True)
         for word in words:
             query = query.filter(or_(
                 cls.raw_content.like("%" + word + "%"),
@@ -204,7 +202,7 @@ class Post(db.Model):
 
     @classmethod
     def get_last_x(cls, limit):
-        return cls.query(cls).filter_by(allow_visit=True).\
+        return cls.query.filter_by(allow_visit=True).\
             order_by(cls.post_id.desc()).all()
 
     @classmethod
@@ -222,9 +220,9 @@ class Post(db.Model):
 
     @classmethod
     def random_post(cls):
-        count = cls.query(cls).filter_by(allow_visit=True, need_key=False).count()
+        count = cls.query.filter_by(allow_visit=True, need_key=False).count()
         index = random.randint(0, count-1)
-        post = cls.query(cls).filter_by(allow_visit=True, need_key=False).offset(index).limit(1)
+        post = cls.query.filter_by(allow_visit=True, need_key=False).offset(index).limit(1)
         return post[0]
 
     def get_tags(self):
@@ -311,7 +309,7 @@ class Tag(db.Model):
 
     @classmethod
     def get_one(cls, name):
-        return cls.query(cls).filter_by(name=name).first()
+        return cls.query.filter_by(name=name).first()
 
     @classmethod
     def add(cls, taglist):
@@ -344,7 +342,7 @@ class Tag(db.Model):
 
     @classmethod
     def get_first_X(cls, count):
-        return cls.query(cls).order_by(cls.count.desc()).limit(count).all()
+        return cls.query.order_by(cls.count.desc()).limit(count).all()
 
 
 class Comment(db.Model):
@@ -363,7 +361,7 @@ class Comment(db.Model):
 
     @classmethod
     def get_by_post_id(cls, post_id):
-        result = cls.query(cls).filter_by(post_id=post_id).all()
+        result = cls.query.filter_by(post_id=post_id).all()
         for i in range(len(result)):
             result[i].content = result[i].content.replace(" ", "&nbsp;")
             result[i].content = result[i].content.replace("\n", "<br>")
@@ -371,7 +369,7 @@ class Comment(db.Model):
 
     @classmethod
     def get_by_id(cls, comment_id):
-        return Comment.query(cls).filter_by(comment_id=comment_id).first()
+        return Comment.query.filter_by(comment_id=comment_id).first()
 
     @classmethod
     def get_by_url(cls, url):
@@ -384,21 +382,21 @@ class Comment(db.Model):
     @classmethod
     def count(cls, post_id=None):
         if post_id is None:
-            return cls.query(cls).count()
+            return cls.query.count()
         else:
-            return cls.query(cls).filter_by(post_id=post_id).count()
+            return cls.query.filter_by(post_id=post_id).count()
 
     @classmethod
     def get_last_X(cls, count):
-        return cls.query(cls).order_by(cls.comment_id.desc()).limit(count).all()
+        return cls.query.order_by(cls.comment_id.desc()).limit(count).all()
 
     @classmethod
     def get_page(cls, offset, limit, post_id=-1):
         if post_id == -1:
-            commentlist = cls.query(cls).order_by(cls.comment_id.desc()).\
+            commentlist = cls.query.order_by(cls.comment_id.desc()).\
                 offset(offset).limit(limit).all()
         else:
-            commentlist = cls.query(cls).order_by(cls.comment_id.desc()).\
+            commentlist = cls.query.order_by(cls.comment_id.desc()).\
                 filter_by(post_id=post_id).offset(offset).limit(limit).all()
         return commentlist
 
@@ -422,23 +420,23 @@ class Link(db.Model):
 
     @classmethod
     def count(cls):
-        return cls.query(cls).count()
+        return cls.query.count()
 
     @classmethod
     def get_page(cls, offset, limit):
-        return cls.query(cls).offset(offset).limit(limit).all()
+        return cls.query.offset(offset).limit(limit).all()
 
     @classmethod
     def get_X(cls, limit):
-        return cls.query(cls).filter_by(display=True).limit(limit).all()
+        return cls.query.filter_by(display=True).limit(limit).all()
 
     @classmethod
     def get_by_id(cls, link_id):
-        return cls.query(cls).filter_by(link_id=int(link_id)).first()
+        return cls.query.filter_by(link_id=int(link_id)).first()
 
     @classmethod
     def get_by_href(cls, href):
-        return cls.query(cls).filter_by(href=href).first()
+        return cls.query.filter_by(href=href).first()
 
     def save(self):
         db.session.add(self)
@@ -461,25 +459,25 @@ class Media(db.Model):
 
     @classmethod
     def count(cls):
-        return cls.query(cls).count()
+        return cls.query.count()
 
     @classmethod
     def get_page(cls, offset, limit):
-        medialist = cls.query(cls).order_by(cls.create_time.desc()).\
+        medialist = cls.query.order_by(cls.create_time.desc()).\
             offset(offset).limit(limit).all()
         return medialist
 
     @classmethod
     def get_by_id(cls, fileid):
-        return cls.query(cls).filter_by(fileid=fileid).first()
+        return cls.query.filter_by(fileid=fileid).first()
 
     @classmethod
     def get_by_filename(cls, filename):
-        return cls.query(cls).filter_by(filename=filename).first()
+        return cls.query.filter_by(filename=filename).first()
 
     @classmethod
     def get_by_fileid(cls, fileid):
-        return cls.query(cls).filter_by(fileid=fileid).first()
+        return cls.query.filter_by(fileid=fileid).first()
 
     def filepath(self, upload_folder):
         return os.path.join(upload_folder, self.local_filename)
@@ -518,7 +516,7 @@ class Fail(db.Model):
         """if one ip address failed for quite a few times, that clinet will have
         to wait for quite a few seconds
         """
-        query = cls.query(cls).filter_by(ip=ip).order_by(cls.last_try.desc())
+        query = cls.query.filter_by(ip=ip).order_by(cls.last_try.desc())
         record = query.first()
 
         if record and record.is_above_threshold():
@@ -529,7 +527,7 @@ class Fail(db.Model):
 
     @classmethod
     def add_record(cls, ip, post_id):
-        record = cls.query(cls).filter_by(ip=ip, post_id=post_id).first()
+        record = cls.query.filter_by(ip=ip, post_id=post_id).first()
         if not record:
             record = cls(ip=ip, post_id=post_id)
             record.count = 0
@@ -541,7 +539,7 @@ class Fail(db.Model):
 
     @classmethod
     def clear_record(cls, ip, post_id):
-        record = cls.query(cls).filter_by(ip=ip, post_id=post_id).first()
+        record = cls.query.filter_by(ip=ip, post_id=post_id).first()
         if record:
             db.session.delete(record)
             db.session.commit()
@@ -574,9 +572,9 @@ def gen_sidebar(config):
 
 def export_all():
     """export all blog data"""
-    postlist = Post.query(Post).all()
-    linklist = Link.query(Link).all()
-    medialist = Media.query(Media).all()
+    postlist = Post.query.all()
+    linklist = Link.query.all()
+    medialist = Media.query.all()
 
     ex_post = []
     for post in postlist:
