@@ -490,7 +490,7 @@ def export_all():
     ex_link = []
     for link in linklist:
         ex_link.append({
-            "link_id": link.link_id,
+            "id": link.id,
             "name": link.name,
             "href": link.href,
             "description": link.description,
