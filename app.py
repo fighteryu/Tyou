@@ -61,6 +61,7 @@ def configure_before_handlers(app):
 
     @app.before_request
     def init_setup():
+        g.version = version
         # 对于静态页面，不加载数据
         if request.endpoint in ("static", "media.medias"):
             return
@@ -139,7 +140,16 @@ def register_manage_command(app):
     return app
 
 
+def get_project_version():
+    """
+    append version to g, so that we can link css like main.css?ver={{g.version}}
+    """
+    import subprocess
+    return subprocess.check_output(["git", "rev-parse", "HEAD"])[:6].decode("utf-8")
+
+
 app = createapp()
+version = get_project_version()
 
 
 if __name__ == "__main__":

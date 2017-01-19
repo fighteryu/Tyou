@@ -140,13 +140,13 @@
 {% endblock postbody%}
 {% block  endscript%}
   {%  if post.editor == "html" %}
-		<script type="text/javascript" src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shCore.min.js"></script>
-		<script type="text/javascript" src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shAutoloader.min.js"></script>
+		<script src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shCore.min.js"></script>
+		<script src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shAutoloader.min.js"></script>
   {%  else %}
-  	<script type="text/javascript" src="//cdn.bootcss.com/marked/0.3.5/marked.min.js"></script>
-		<script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js"></script>
+  	<script src="//cdn.bootcss.com/marked/0.3.5/marked.min.js"></script>
+	<script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js"></script>
   {%  endif %}
-	<script type="text/javascript" src="/static/js/comment.js" charset="utf-8"></script>
+	<script src="/static/js/comment.js?version={{g.version}}" charset="utf-8"></script>
 
 <script type="text/javascript">
 	$(document).ready(function(){

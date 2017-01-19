@@ -12,6 +12,7 @@ py/
 .py/
 .py3/
 .idea/
+logs/
 uploads
 .ropeproject
 .DS_Store
