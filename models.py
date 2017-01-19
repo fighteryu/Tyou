@@ -433,7 +433,7 @@ def gen_sidebar(config):
     comments = Comment.get_comments().options(db.subqueryload(Comment.post)).\
         order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
     rr["comments"] = comments
-    links = Link.get_links().order_by(Link.id.desc()).limit(config["LINK_COUNT"])
+    links = Link.get_links(display=True).order_by(Link.id.desc()).limit(config["LINK_COUNT"])
     rr["links"] = links
 
     announce = Post.get_post(id=config["ANNOUNCE_ID"])
