@@ -5,12 +5,10 @@
     ~~~~~~~~~~~~~
 
 """
-import random
-
 from flask import request, jsonify, g, abort, render_template,\
     flash, redirect, url_for, session
 
-from models import Post, Comment, User, Fail
+from models import Post, Comment, User
 from helpers import gen_pager
 from .other import frontend
 from compat import unquote
@@ -20,14 +18,14 @@ from compat import unquote
 @frontend.route("/index")
 def index():
     page = int(request.args.get("page", 1))
-    postlist = Post.get_page(page, allow_visit=True)
+    posts = Post.get_page(page, allow_visit=True, order_by=Post.id.desc())
     pager = gen_pager(page, Post.count(allow_visit=True), g.config["PER_PAGE"],
                       request.url)
-    if postlist or page == 1:
+    if posts or page == 1:
         return render_template(
             "index.html",
             blogname=g.config["BLOGNAME"],
-            postlist=postlist,
+            posts=posts,
             pager=pager)
     else:
         return render_template("error/404.html")
@@ -60,37 +58,12 @@ def key():
             message="Post doesn't exists"
         )
 
-    validate_result = Fail.validate_client(request.remote_addr)
-    if validate_result is False:
-        return jsonify(
-            validate=False,
-            error=True,
-            message="Please wait for a few seconds and try later"
-        )
-
     post_password = post.password or g.config.get("POST_PASSWORD", "")
     if post_password != data.get("post_password", None):
-        record = Fail.add_record(request.remote_addr, post.post_id)
-        # There is a chance in which users in put wrong password for quite a
-        # few times, and we direct them to a random page
-        if record.is_above_threshold() and random.randint(1, 5) % 5 == 0:
-            return jsonify(validate=True,
-                           error=False,
-                           message=Post.random_post().content
-                           )
-
-        return jsonify(
-            validate=False,
-            error=True,
-            message=u"Password error!")
+        return jsonify(validate=False, error=True, message=u"Password error!")
 
     else:
-        Fail.clear_record(request.remote_addr, post.post_id)
-        return jsonify(
-            validate=True,
-            error=False,
-            message=post.content
-        )
+        return jsonify(validate=True, error=False, message=post.content)
 
 
 @frontend.route("/comment", methods=["DELETE", "POST"])
@@ -116,7 +89,7 @@ def comment():
         to = None
         if usercomment.get("refid", None):
             refid = int(usercomment["refid"])
-            refcomment = Comment.get_comment(refid=refid)
+            refcomment = Comment.get_comment(id=refid)
             if refcomment:
                 to = refcomment.nickname
         post = Post.query.filter_by(id=post_id).first()

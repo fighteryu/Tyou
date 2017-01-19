@@ -3,6 +3,8 @@ app.wsgi
 #ignore configuration files
 settings.py
 config.py
+# ignore database files
+*.db
 
 *.swp
 test

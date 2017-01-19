@@ -129,7 +129,7 @@
 			<i class="c-nickname">{{ eachcomment.nickname }}</i> {% if eachcomment.to%}回复 <i>{{ eachcomment.to }}</i> {% endif%}<span class="c-time">{{ eachcomment.create_time.strftime("%Y-%m-%d %H:%M") }}</span>
 			<a href="#" class="c-quote"> 回复</a>
 		</div>
-		<div class="c-content" _id="{{ eachcomment.comment_id }}">{{ eachcomment.content | safe }}</div>
+		<div class="c-content" _id="{{ eachcomment.id }}">{{ eachcomment.content | safe }}</div>
 	</div>
 	<div class="divider"></div>
 	{% endfor%}
@@ -146,7 +146,7 @@
   	<script type="text/javascript" src="//cdn.bootcss.com/marked/0.3.5/marked.min.js"></script>
 		<script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js"></script>
   {%  endif %}
-	<script type="text/javascript" src="/static/js/comment.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="/static/js/comment.js" charset="utf-8"></script>
 
 <script type="text/javascript">
 	$(document).ready(function(){

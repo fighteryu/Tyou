@@ -9,7 +9,6 @@ import os
 import re
 import time
 import json
-import random
 import hashlib
 import markdown2
 from datetime import datetime
@@ -26,7 +25,12 @@ class ModelMixin():
     @classmethod
     def get_page(cls, page, **kwargs):
         offset = current_app.config["PER_PAGE"] * (page - 1)
-        return cls.query.filter_by(**kwargs).offset(offset).limit(current_app.config["PER_PAGE"])
+        order_by = kwargs.pop("order_by", None)
+
+        query = cls.query.filter_by(**kwargs)
+        if order_by is not None:
+            query = query.order_by(order_by)
+        return query.offset(offset).limit(current_app.config["PER_PAGE"])
 
     def save(self):
         db.session.add(self)
@@ -167,7 +171,7 @@ class Post(ModelMixin, db.Model):
             return []
         return cls.query.filter_by(allow_visit=True).\
             filter(cls.tags.like("%,"+keyword+",%")).\
-            order_by(cls.post_id.desc()).offset(offset).limit(limit).all()
+            order_by(cls.id.desc()).offset(offset).limit(limit).all()
 
     @classmethod
     def tag_search_count(cls, keyword):
@@ -202,11 +206,6 @@ class Post(ModelMixin, db.Model):
         return query.count()
 
     @classmethod
-    def get_last_x(cls, limit):
-        return cls.query.filter_by(allow_visit=True).\
-            order_by(cls.post_id.desc()).all()
-
-    @classmethod
     def gen_raw_content(cls, content, editor):
         """Remove unused mark up tags, so that mysql is able to do text search
         a silly way to convert MarkDown to plain text:
@@ -218,13 +217,6 @@ class Post(ModelMixin, db.Model):
             return re.sub('<[^<]+?>', "", content)
         elif editor == "html":
             return re.sub('<[^<]+?>', "", content)
-
-    @classmethod
-    def random_post(cls):
-        count = cls.query.filter_by(allow_visit=True, need_key=False).count()
-        index = random.randint(0, count-1)
-        post = cls.query.filter_by(allow_visit=True, need_key=False).offset(index).limit(1)
-        return post[0]
 
     def get_tags(self):
         tags = self.tags.split(",")
@@ -314,16 +306,18 @@ class Tag(ModelMixin, db.Model):
         """never use this method directly , use Post.update_tags instead
         """
         for tag_name in tags:
-            if tag_name:
-                tag = Tag.get_tag(name=tag_name)
-                if tag:
-                    tag.count += 1
-                    # items in uppercase and lowercase are treated as one tag.
-                    # update name to get the most recent version
-                    tag.name = tag_name
-                else:
-                    tag = Tag(name=tag_name)
-                    db.session.add(tag)
+            if not tag_name:
+                continue
+
+            tag = Tag.get_tag(name=tag_name)
+            if tag:
+                tag.count += 1
+                # items in uppercase and lowercase are treated as one tag.
+                # update name to get the most recent version
+                tag.name = tag_name
+            else:
+                tag = Tag(name=tag_name)
+            db.session.add(tag)
 
     @classmethod
     def minus(cls, tags):
@@ -340,6 +334,7 @@ class Comment(ModelMixin, db.Model):
     __tablename__ = "comment"
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    post = db.relationship("Post", backref="comments")
     email = db.Column(db.String(64))
     nickname = db.Column(db.String(20))
     content = db.Column(db.String(1024))
@@ -386,7 +381,8 @@ class Link(ModelMixin, db.Model):
 
 
 class Media(ModelMixin, db.Model):
-    fileid = db.Column(db.String(64), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    fileid = db.Column(db.String(64))
     filename = db.Column(db.String(64))
     # For a give filename , there could be multi file exits
     version = db.Column(db.Integer)
@@ -425,65 +421,17 @@ class Media(ModelMixin, db.Model):
         db.session.commit()
 
 
-class Fail(db.Model):
-    """This table is used to keep up with failed password attempt.
-    """
-    __tablename__ = "fail"
-    fail_id = db.Column(db.Integer, primary_key=True)
-    ip = db.Column(db.String(15))
-    post_id = db.Column(db.Integer)
-    count = db.Column(db.Integer, default=0)
-    last_try = db.Column(db.DateTime)
-
-    @classmethod
-    def validate_client(cls, ip):
-        """if one ip address failed for quite a few times, that clinet will have
-        to wait for quite a few seconds
-        """
-        query = cls.query.filter_by(ip=ip).order_by(cls.last_try.desc())
-        record = query.first()
-
-        if record and record.is_above_threshold():
-            latency = datetime.now() - record.last_try
-            if latency.total_seconds() < 5:
-                return False
-        return True
-
-    @classmethod
-    def add_record(cls, ip, post_id):
-        record = cls.query.filter_by(ip=ip, post_id=post_id).first()
-        if not record:
-            record = cls(ip=ip, post_id=post_id)
-            record.count = 0
-        record.count += 1
-        record.last_try = datetime.now()
-        db.session.add(record)
-        db.session.commit()
-        return record
-
-    @classmethod
-    def clear_record(cls, ip, post_id):
-        record = cls.query.filter_by(ip=ip, post_id=post_id).first()
-        if record:
-            db.session.delete(record)
-            db.session.commit()
-
-    def is_above_threshold(self):
-        """if count > 5, the password attempt is above threadshold
-        """
-        return self.count > 5
-
-
 def gen_sidebar(config):
     rr = {
-        "taglist": None,
-        "commentlist": None,
-        "linklist": None
+        "tags": None,
+        "comments": None,
+        "links": None
     }
 
     tags = Tag.get_tags().order_by(Tag.count.desc()).limit(config["TAG_COUNT"])
-    rr["tasg"] = tags
-    comments = Comment.get_comments().order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
+    rr["tags"] = tags
+    comments = Comment.get_comments().options(db.subqueryload(Comment.post)).\
+        order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
     rr["comments"] = comments
     links = Link.get_links().order_by(Link.id.desc()).limit(config["LINK_COUNT"])
     rr["links"] = links

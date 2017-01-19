@@ -19,7 +19,7 @@
 		<input type="text" style="display:none">
 		<input type="password" style="display:none">
 
-		<input type="hidden" name="post_id" id="post_id" {%if post.post_id %}value="{{post.post_id}}"{%endif%}/>
+		<input type="hidden" name="post_id" id="post_id" {%if post.id %}value="{{post.id}}"{%endif%}/>
 		<input type="hidden" name="editor" id="content_editor" value="{% if admin_url=='post_html' %}html{% else %}markdown{%endif%}"/> 
 		<div class="input-group">
 			<span class="input-group-addon">标题</span>

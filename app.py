@@ -22,6 +22,7 @@ def createapp():
     configure_modules(app)
     configure_db(app)
     configure_before_handlers(app)
+    configure_after_handlers(app)
     configure_errorhandlers(app)
     register_manage_command(app)
     return app
@@ -60,9 +61,26 @@ def configure_before_handlers(app):
 
     @app.before_request
     def init_setup():
+        # 对于静态页面，不加载数据
+        if request.endpoint in ("static", "media.medias"):
+            return
+
         session.permanent = True
         g.config = User.get_config() or app.config
+
+        # 避免非页面请求生成了sidebar
+        if request.method != "GET":
+            return
+
         g.sidebar = gen_sidebar(g.config)
+
+
+def configure_after_handlers(app):
+
+    @app.after_request
+    def auto_commit(response):
+        db.session.commit()
+        return response
 
 
 def configure_errorhandlers(app):

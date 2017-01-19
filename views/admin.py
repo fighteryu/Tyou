@@ -41,11 +41,11 @@ def posts():
     elif "allow_comment" in args and args["allow_comment"] == "false":
         kargs["allow_comment"] = False
 
-    postlist = Post.get_page(page, **kargs)
+    posts = Post.get_page(page, order_by=Post.id.desc(), **kargs)
 
     pager = gen_pager(page, Post.count(**kargs), perpage, request.url)
     return render_template('admin/posts.html',
-                           postlist=postlist,
+                           posts=posts,
                            admin_url="posts",
                            pager=pager,
                            parameter=request.query_string)
@@ -63,7 +63,7 @@ def pageinplace():
     post = Post.get_post(url=url)
 
     # same post or the post doesn't exist
-    if (post and post.post_id == post_id) or (not post):
+    if (post and post.id == post_id) or (not post):
         return jsonify(success=True, in_place=False)
     else:
         return jsonify(success=True, in_place=True)
@@ -193,13 +193,12 @@ def setting():
 def medias():
     page = int(request.args.get("page", 1))
     perpage = g.config["ADMIN_ITEM_COUNT"]
-    medialist = Media.get_page(page)
+    medias = Media.get_page(page, order_by=Media.id.desc())
     pager = gen_pager(page, Media.count(), perpage, request.url)
     return render_template('admin/medias.html',
                            admin_url="medias",
-                           medialist=medialist,
-                           pager=pager
-                           )
+                           medias=medias,
+                           pager=pager)
 
 
 @adminor.route('/comments', methods=["GET"])
@@ -210,10 +209,10 @@ def comments():
         perpage = g.config["ADMIN_ITEM_COUNT"]
         if 'post_id' in request.args:
             post_id = request.args['post_id']
-            comments = Comment.get_page(page, post_id=post_id)
+            comments = Comment.get_page(page, post_id=post_id, order_by=Comment.id.desc())
             pager = gen_pager(page, Comment.count(post_id), perpage, request.url)
         else:
-            comments = Comment.get_page(page)
+            comments = Comment.get_page(page, order_by=Comment.id.desc())
             pager = gen_pager(page, Comment.count(), perpage, request.url)
         return render_template('admin/comments.html',
                                comments=comments,

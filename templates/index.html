@@ -4,9 +4,9 @@
 {%block title%}{{blogname}}{%if pager%}--第{{pager.current}}页{%endif%}{%endblock title%}
 
 {%block postbody%}
-{%for eachpost in postlist%}
+{%for post in posts%}
 	<div class="row outline widget">
-	{{list_post_simple(eachpost) | safe}}
+	{{list_post_simple(post) | safe}}
 	</div>
 {%endfor%}
 {%from 'part/pager3' import pager_funct%}

@@ -17,7 +17,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{% for post in postlist %}
+		{% for post in posts %}
 		<tr>
 			<th>
 				<input class="page" type="checkbox" value="on" name="{{ post.id }}">
@@ -31,14 +31,14 @@
 				<a href="/page/{{ post.url }}">{{ post.title }}</a>
 			</td>
 			{% if post.is_original %}
-			<td><a href="/admin/postlist?is_original=true">是</a></td>{% else %}
-			<td><a href="/admin/postlist?is_original=false">否</a></td>{% endif %}
+			<td><a href="/admin/posts?is_original=true">是</a></td>{% else %}
+			<td><a href="/admin/posts?is_original=false">否</a></td>{% endif %}
 			{% if post.allow_visit %}
-			<td><a href="/admin/postlist?allow_visit=true">发布</a></td>{% else %}
-			<td><a href="/admin/postlist?allow_visit=false">不发布</a></td>{% endif %}
+			<td><a href="/admin/posts?allow_visit=true">发布</a></td>{% else %}
+			<td><a href="/admin/posts?allow_visit=false">不发布</a></td>{% endif %}
 			{% if post.allow_comment %}
-			<td><a href="/admin/postlist?allow_comment=true">允许</a></td>{% else %}
-			<td><a href="/admin/postlist?allow_comment=false">不允许</a></td>{% endif %}
+			<td><a href="/admin/posts?allow_comment=true">允许</a></td>{% else %}
+			<td><a href="/admin/posts?allow_comment=false">不允许</a></td>{% endif %}
 			{% if post.need_key %}
 			<td>需要</td>{% else %}
 			<td>不需要</td>{% endif %}

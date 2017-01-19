@@ -25,7 +25,7 @@ def make_external(url):
 def recent_feed():
     feed = AtomFeed(g.config["BLOGNAME"],
                     feed_url=request.url, url=request.url_root)
-    postlist = Post.get_posts(allow_visit=True)
+    postlist = Post.get_posts(allow_visit=True).limit(20)
     for post in postlist:
         if not post.need_key:
             feed.add(post.title, post.html_content,
@@ -50,7 +50,7 @@ def sitemap():
     """Generate sitemap.xml. Makes a list of urls and date modified."""
     # user model postlist
     postlist = []
-    alllist = Post.get_last_x(100)
+    alllist = Post.get_posts(allow_visit=True).order_by(Post.id.desc())
 
     url = make_external("/")
     if alllist:

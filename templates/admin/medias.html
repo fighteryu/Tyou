@@ -31,7 +31,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{% for media in medialist %}
+		{% for media in medias %}
 		<tr>
 			<th>
 				<input class="page" type="checkbox" value="on" filename="{{media.filename}}" fileid="{{media.fileid}}">
@@ -40,7 +40,7 @@
 				<div class="time">{{media.create_time.strftime("%Y-%m-%d %H:%M")}}</div>
 			</td>
 			<td>
-				<a href="/media/{{media.filename}}?fileid={{media.fileid}}">{{media.filename}}</a>
+				<a href="/media/{{media.filename}}">{{media.filename}}</a>
 			</td>
 			<td>
 				<div class="filesize">

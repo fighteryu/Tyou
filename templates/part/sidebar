@@ -33,7 +33,7 @@
                 <i class="c-nickname">{{item.nickname}}</i> 在
                 <span class="c-time">{{item.create_time.strftime("%Y-%m-%d %H:%M")}}</span> :
             </div>
-            <div class="c-content"><a href="/page/{{item.url}}">{{item.content}}</a></div>
+            <div class="c-content"><a href="/page/{{item.post.url}}">{{item.content}}</a></div>
         </div>
         {%endfor%}
 
