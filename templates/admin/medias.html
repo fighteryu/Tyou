@@ -1,9 +1,6 @@
 {% extends "part/adminbase" %}
 {% block title %}Admin Blog--文件{% endblock title %}
-{% block extraadminhead %}
-<link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload-ui.css"/>
-<link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload.css"/>
-{% endblock extraadminhead %}
+
 {% block admincontent %}
 <span class="btn btn-success fileinput-button">
         <i class="glyphicon glyphicon-plus"></i>
@@ -62,6 +59,10 @@
 {{ pager_funct(pager)|safe }}
 {% endblock admincontent %}
 
+{% block extraadminfiles %}
+<link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload-ui.css"/>
+<link rel="stylesheet" type="text/css" href="/static/js/lib/jQuery-File-Upload/css/jquery.fileupload.css"/>
+{% endblock extraadminfiles %}
 {% block  endscript %}
 <script src="/static/js/lib/jQuery-File-Upload/vendor/jquery.ui.widget.js"></script>
 <script src="/static/js/lib/jQuery-File-Upload/vendor/load-image.all.min.js"></script>
