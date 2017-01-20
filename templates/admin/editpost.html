@@ -128,7 +128,7 @@ function submitEvent(event){
 	data.password = $("#password").val();
 	// data.allow_comment=$("#allow_comment").is(":checked");
 	// data.allow_visit=$("#allow_visit").is(":checked");
-	data.post_id=parseInt($("#post_id").val());
+	data.id=parseInt($("#post_id").val());
 	data=JSON.stringify(data,false);
 	$.ajax({
 		type:"post",
@@ -141,7 +141,7 @@ function submitEvent(event){
 			$("#message").html("");
 			$("#message").html(message);
 			$("#tmp").fadeOut(3000);
-			$("#post_id").val(String(data.post_id));
+			$("#post_id").val(String(data.id));
 
 		}});
 	return false;

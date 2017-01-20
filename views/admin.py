@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, render_template, g, request, abort, jsonify,\
     redirect, url_for, send_file
-from models import Post, Comment, Link, Media, User
+from models import Post, Comment, Link, Media, User, db
 from helpers import gen_pager
 from decorators import admin_required
 
@@ -72,15 +72,15 @@ def pageinplace():
 @adminor.route("/post", methods=["GET", "POST", "DELETE"])
 @adminor.route("/post/<int:post_id>", methods=["GET", "POST", "DELETE"])
 @admin_required
-def editpost(post_id=None):
+def editpost(id=None):
     """show the edit page, update the post
     choice of editor:
         while editing an existing post, use post.editor as the editor
         editing a new post, use request.args["editor"] as the editor
     """
     if request.method == "GET":
-        if post_id is not None:
-            post = Post.get_post(id=post_id)
+        if id is not None:
+            post = Post.get_post(id=id)
             editor = post.editor
             if not post:
                 abort(404)
@@ -95,8 +95,8 @@ def editpost(post_id=None):
     elif request.method == "POST":
         data = request.json
         now_time = datetime.now()
-        if data['post_id'] is not None:
-            post = Post.get_post(id=int(data["post_id"]))
+        if data['id'] is not None:
+            post = Post.get_post(id=int(data["id"]))
         else:
             post = Post()
             post.create_time = now_time
@@ -114,13 +114,14 @@ def editpost(post_id=None):
         post.is_original = data.get("is_original", True)
         post.need_key = data.get("need_key", False)
         post.password = data.get("password", "")
-        post.save()
-        return jsonify(success=True, post_id=post.id)
+        db.session.add(post)
+        db.session.commit()
+        return jsonify(success=True, id=post.id)
 
     elif request.method == "DELETE":
         # Delete post by id
-        if post_id is not None:
-            post = Post.get_post(id=int(post_id))
+        if id is not None:
+            post = Post.get_post(id=int(id))
             if post:
                 post.delete()
         # Batch Delete method
