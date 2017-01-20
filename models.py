@@ -137,7 +137,7 @@ class Post(ModelMixin, db.Model):
             "password": "",
             "tags": "",
             "editor": "markdown",
-            "allow_visit": True,
+            "allow_visit": False,
             "allow_comment": True,
             "need_key": False,
             "is_original": True,
