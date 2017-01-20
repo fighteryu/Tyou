@@ -5,14 +5,14 @@
 	{% if post.keywords%}<meta name="keywords" content='{{ post.keywords }}'/>{% endif%}
 	{% if post.metacontent%}<meta name="description" content="{{ post.metacontent }}"/>{% endif%}
 {% endblock meta%}
-{% block extrahead%}
+{% block extrafiles%}
 	{%  if post.editor == "html" %}
 		<link href="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/styles/shCore.min.css" rel="stylesheet" type="text/css" />
 		<link href="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/styles/shThemeDefault.min.css" rel="stylesheet" type="text/css" />
 	{%  else %}
-		<link rel="stylesheet" href="//cdn.bootcss.com/highlight.js/9.2.0/styles/github-gist.min.css">
+		<link rel="stylesheet" href="http://cdn.bootcss.com/highlight.js/9.9.0/styles/atom-one-light.min.css">
 	{% endif %}
-{% endblock extrahead%}
+{% endblock extrafiles%}
 
 {% block postbody%}
 <form>
@@ -143,10 +143,10 @@
 		<script src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shCore.min.js"></script>
 		<script src="//cdn.bootcss.com/SyntaxHighlighter/3.0.83/scripts/shAutoloader.min.js"></script>
   {%  else %}
-  	<script src="//cdn.bootcss.com/marked/0.3.5/marked.min.js"></script>
-	<script src="//cdn.bootcss.com/highlight.js/9.2.0/highlight.min.js"></script>
+  	<script src="//cdn.bootcss.com/marked/0.3.6/marked.min.js"></script>
+	<script src="//cdn.bootcss.com/highlight.js/9.9.0/highlight.min.js"></script>
   {%  endif %}
-	<script src="/static/js/comment.js?version={{g.version}}" charset="utf-8"></script>
+	<script src="/static/js/comment.min.js?version={{g.version}}" charset="utf-8"></script>
 
 <script type="text/javascript">
 	$(document).ready(function(){

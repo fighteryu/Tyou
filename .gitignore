@@ -12,6 +12,7 @@ py/
 .py/
 .py3/
 .idea/
+.vscode/
 logs/
 uploads
 .ropeproject

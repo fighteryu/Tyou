@@ -1,9 +1,5 @@
 {%extends "part/base"%}
 {%block title%}Markdown{%endblock title%}
-{%block extrahead%}
-<link rel="stylesheet" type="text/css" href="/static/frozen/editormd/css/editormd.min.css">
-<script type="text/javascript" src="/static/frozen/editormd/js/editormd.min.js"></script>
-{%endblock extrahead%}
 
 {%block content%}
 <div class="maincontainer">
@@ -125,3 +121,7 @@
 </script>
 
 {%endblock  endscript%}
+{%block extrafiles%}
+<link rel="stylesheet" type="text/css" href="/static/frozen/editormd/css/editormd.min.css?version={{g.version}}">
+<script type="text/javascript" src="/static/frozen/editormd/js/editormd.min.js?version={{g.version}}"></script>
+{%endblock extrafiles%}
