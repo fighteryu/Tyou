@@ -15,7 +15,7 @@ from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
-from flask.globals import current_app
+from flask.globals import g
 
 
 db = SQLAlchemy()
@@ -30,7 +30,7 @@ class ModelMixin():
         query = cls.query.filter_by(**kwargs)
         if order_by is not None:
             query = query.order_by(order_by)
-        return query.offset(offset).limit(current_app.config["PER_PAGE"])
+        return query.offset(offset).limit(g.config["PER_PAGE"])
 
     def save(self):
         db.session.add(self)
