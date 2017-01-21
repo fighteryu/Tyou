@@ -149,7 +149,7 @@ def overview(post_id=-1):
 def links():
     perpage = g.config["ADMIN_ITEM_COUNT"]
     page = int(request.args.get("page", 1))
-    linklist = Link.get_page(page)
+    linklist = Link.get_page(page, perpage=perpage)
     pager = gen_pager(page, Link.count(), perpage, request.url)
     return render_template('admin/links.html',
                            linklist=linklist,
@@ -194,7 +194,7 @@ def setting():
 def medias():
     page = int(request.args.get("page", 1))
     perpage = g.config["ADMIN_ITEM_COUNT"]
-    medias = Media.get_page(page, order_by=Media.id.desc())
+    medias = Media.get_page(page, order_by=Media.id.desc(), perpage=perpage)
     pager = gen_pager(page, Media.count(), perpage, request.url)
     return render_template('admin/medias.html',
                            admin_url="medias",
@@ -210,7 +210,9 @@ def comments():
         perpage = g.config["ADMIN_ITEM_COUNT"]
         if 'post_id' in request.args:
             post_id = request.args['post_id']
-            comments = Comment.get_page(page, post_id=post_id, order_by=Comment.id.desc())
+            comments = Comment.get_page(
+                page, post_id=post_id, order_by=Comment.id.desc(), perpage=perpage
+            )
             pager = gen_pager(page, Comment.count(post_id), perpage, request.url)
         else:
             comments = Comment.get_page(page, order_by=Comment.id.desc())
