@@ -127,6 +127,7 @@ def register_manage_command(app):
         create user
         """
         User.create_user(kwargs["username"], kwargs["password"])
+        db.session.commit()
         print("create user done")
 
     @app.cli.command()
@@ -135,6 +136,7 @@ def register_manage_command(app):
         """delete current user, blog posts won't be deleted
         """
         User.delete_user(kwargs["username"])
+        db.session.commit()
         print("delete user done")
 
     return app
