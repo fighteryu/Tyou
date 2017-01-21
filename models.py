@@ -24,7 +24,7 @@ db = SQLAlchemy()
 class ModelMixin():
     @classmethod
     def get_page(cls, page, **kwargs):
-        offset = current_app.config["PER_PAGE"] * (page - 1)
+        offset = g.config["PER_PAGE"] * (page - 1)
         order_by = kwargs.pop("order_by", None)
 
         query = cls.query.filter_by(**kwargs)
