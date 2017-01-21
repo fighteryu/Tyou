@@ -24,13 +24,15 @@ db = SQLAlchemy()
 class ModelMixin():
     @classmethod
     def get_page(cls, page, **kwargs):
-        offset = g.config["PER_PAGE"] * (page - 1)
+        perpage = kwargs.pop("perpage", None) or g.config["PER_PAGE"]
+        offset = perpage * (page - 1)
+
         order_by = kwargs.pop("order_by", None)
 
         query = cls.query.filter_by(**kwargs)
         if order_by is not None:
             query = query.order_by(order_by)
-        return query.offset(offset).limit(g.config["PER_PAGE"])
+        return query.offset(offset).limit(perpage)
 
     def save(self):
         db.session.add(self)

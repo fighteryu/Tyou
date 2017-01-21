@@ -41,7 +41,7 @@ def posts():
     elif "allow_comment" in args and args["allow_comment"] == "false":
         kargs["allow_comment"] = False
 
-    posts = Post.get_page(page, order_by=Post.id.desc(), **kargs)
+    posts = Post.get_page(page, order_by=Post.id.desc(), perpage=perpage, **kargs)
 
     pager = gen_pager(page, Post.count(**kargs), perpage, request.url)
     return render_template('admin/posts.html',
