@@ -224,9 +224,10 @@ class Post(ModelMixin, db.Model):
         tags = [tag for tag in tags if tag]
         return tags
 
-    def to_tags(self, taglist):
-        tags = ",".join(taglist)
-        return "," + tags + ","
+    def to_tags(self, tagnames):
+        tagnames = set([i.strip() for i in tagnames])
+        tagnames = ",".join(tagnames)
+        return "," + tagnames + ","
 
     @property
     def html_content(self):
@@ -254,20 +255,11 @@ class Post(ModelMixin, db.Model):
             and after "abc,123", so we can do the follwoing mysql search
                 `select * from tag where name like '%,tagname,%'`
         """
-        duptags = new_string.split(",")
-        newtags = set()
-        for item in duptags:
-            if item.strip() and item.strip() not in newtags:
-                newtags.add(item.strip())
+        tagnames = set(new_string.split(",") + self.tags.split(","))
+        for tagname in tagnames:
+            Tag.update_tag(tagname)
 
-        oldtags = self.get_tags()
-        addlist = [item for item in newtags if item not in oldtags]
-        minuslist = [item for item in oldtags if item not in newtags]
-
-        Tag.add(addlist)
-        Tag.minus(minuslist)
-
-        self.tags = self.to_tags(newtags)
+        self.tags = self.to_tags(new_string.split(","))
         return self.tags
 
     def delete_tags(self):
@@ -303,32 +295,30 @@ class Tag(ModelMixin, db.Model):
         return Tag.query.filter_by(**kwargs)
 
     @classmethod
-    def add(cls, tags):
-        """never use this method directly , use Post.update_tags instead
-        """
-        for tag_name in tags:
-            if not tag_name:
-                continue
+    def update_tag(cls, tagname):
+        tagname = tagname.strip()
+        if not tagname:
+            return
 
-            tag = Tag.get_tag(name=tag_name)
-            if tag:
-                tag.count += 1
-                # items in uppercase and lowercase are treated as one tag.
-                # update name to get the most recent version
-                tag.name = tag_name
-            else:
-                tag = Tag(name=tag_name)
-            db.session.add(tag)
+        tag_count = Post.query.filter(Post.tags.like("%,{},%".format(tagname))).count()
+        if tag_count == 0:
+            cls.delete_tag(tagname)
+        else:
+            cls.update_or_create_tag(tagname, tag_count)
 
     @classmethod
-    def minus(cls, tags):
-        for tag_name in tags:
-            tag = Tag.get_tag(name=tag_name)
-            if tag:
-                if tag.count > 1:
-                    tag.count -= 1
-                else:
-                    db.session.delete(tag)
+    def delete_tag(cls, tagname):
+        tag = cls.get_tag(name=tagname)
+        if tag:
+            db.session.delete(tag)
+
+    @classmethod
+    def update_or_create_tag(cls, tagname, count):
+        tag = cls.get_tag(name=tagname)
+        if not tag:
+            tag = cls(name=tagname, count=count)
+        tag.count = count
+        db.session.add(tag)
 
 
 class Comment(ModelMixin, db.Model):
