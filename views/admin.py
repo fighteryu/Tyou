@@ -70,7 +70,7 @@ def pageinplace():
 
 
 @adminor.route("/post", methods=["GET", "POST", "DELETE"])
-@adminor.route("/post/<int:post_id>", methods=["GET", "POST", "DELETE"])
+@adminor.route("/post/<int:id>", methods=["GET", "POST", "DELETE"])
 @admin_required
 def editpost(id=None):
     """show the edit page, update the post
