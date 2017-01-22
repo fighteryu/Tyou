@@ -192,8 +192,7 @@ class Post(ModelMixin, db.Model):
                 cls.raw_content.like("%" + word + "%"),
                 cls.title.like("%" + word + "%")
             ))
-        return query.order_by(
-            cls.post_id.desc()).offset(offset).limit(limit).all()
+        return query.order_by(cls.id.desc()).offset(offset).limit(limit).all()
 
     @classmethod
     def text_search_count(cls, words):
