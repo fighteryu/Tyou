@@ -32,6 +32,13 @@
 	<div>{{ comment.count }} comments</div>
 	{% endif%}
 	</header>
+	<div class="tagcloud">
+	{% for tag in post.get_tags()%}
+		<div class="tag">
+		<a href="/search/?tagname={{ tag|urlencode }}">{{ tag }}</a>
+		</div>			
+	{% endfor%}	
+	</div>
 	<div class="divider"></div>
 	{% if admin_url == "overview"%}
 		{% if post.need_key%}
@@ -65,13 +72,6 @@
 		{% endif %}
 	{% endif%}
 	<div class="divider"></div>
-	<div class="tagcloud">
-	{% for tag in post.get_tags()%}
-		<div class="tag">
-		<a href="/search/?tagname={{ tag|urlencode }}">{{ tag }}</a>
-		</div>			
-	{% endfor%}	
-	</div>
 	<div class="operation">
 		{% if post.allow_comment%}操作: <a class="c-quote" href="#c-new">评论</a> {% endif%}{% if session.is_admin%} | <a href="/admin/post/{{ post.id }}">编辑</a>{% endif%} 
 	</div>
