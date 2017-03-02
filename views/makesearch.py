@@ -14,22 +14,16 @@ makesearch = Blueprint('search', __name__, template_folder="../templates")
 
 @makesearch.route('')
 @makesearch.route('/')
-@makesearch.route('/<int:page>')
 def dosearch(page=1):
+    page = int(request.args.get("page", 1))
     # Tag search
     if "tagname" in request.args:
         tagname = request.args.get("tagname").strip()
-        # Defence of SQL injection
-        if " " in tagname or tagname == "":
-            postlist = []
-            count = 0
-        else:
-            postlist = Post.tag_search(
-                keyword=tagname,
-                offset=g.config["PER_PAGE"] * (page-1),
-                limit=g.config["PER_PAGE"]
-            )
-            count = Post.tag_search_count(tagname)
+        count, posts = Post.tag_search(
+            keyword=tagname,
+            offset=g.config["PER_PAGE"] * (page-1),
+            limit=g.config["PER_PAGE"]
+        )
 
         pager = gen_pager(page, count, g.config["PER_PAGE"], request.url)
         return render_template(
@@ -37,7 +31,7 @@ def dosearch(page=1):
             searchtype="tagsearch",
             searchcontent=tagname,
             pager=pager,
-            postlist=postlist,
+            posts=posts,
             parameter=request.query_string)
 
     # Text search
@@ -45,22 +39,21 @@ def dosearch(page=1):
         words = request.args["keyword"].split()
         # In case a query with too much keywords
         words = [word for word in words if len(word) >= 2]
-        if len(words) > 5 or len(words) == 0:
-            postlist = []
+        if len(words) == 0:
+            posts = []
             count = 0
         else:
-            postlist = Post.text_search(
+            count, posts = Post.text_search(
                 words=words,
                 offset=g.config["PER_PAGE"]*(page-1),
                 limit=g.config["PER_PAGE"]
             )
-            count = Post.text_search_count(words=words)
 
         pager = gen_pager(page, count, g.config["PER_PAGE"], request.url)
         return render_template(
             'search.html',
             searchtype="textsearch",
             searchcontent=" ".join(words),
-            postlist=postlist,
+            posts=posts,
             pager=pager,
             parameter=request.query_string)

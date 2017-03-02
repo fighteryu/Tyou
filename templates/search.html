@@ -15,8 +15,8 @@
 				<input type="button" _param="tagname" name="searchbutton" class="btn btn-primary disabled" value="标签搜索" onclick="doSearch2('{{searchtype}}');return false;"/>
 		</div>
 	{% endif %}
-	{% if postlist %}
-		{% for eachpost in postlist %}
+	{% if posts %}
+		{% for eachpost in posts %}
 		<div class="row outline widget">
 			{{ list_post_simple(eachpost)|safe }}
 		</div>

@@ -11,11 +11,11 @@
 		<input type="hidden" name="editor" id="content_editor" value="{% if admin_url=='post_html' %}html{% else %}markdown{%endif%}"/> 
 		<div class="input-group">
 			<span class="input-group-addon">标题</span>
-			<input type="text"  name="title" id="title" value="{{post.title}}" class="form-control" placeholder="Title">
+			<input type="text"  name="title" id="title" value="{{post.title or ''}}" class="form-control" placeholder="Title">
 		</div>
 		<div class="input-group">
 			<span class="input-group-addon">Url</span>
-			<input type="text"   name="url" id="url" value="{{post.url}}" class="form-control">
+			<input type="text"   name="url" id="url" value="{{post.url or ''}}" class="form-control">
 		</div>
 		<div class="input-group">
 			<span class="input-group-addon">标签</span>
@@ -81,7 +81,7 @@
 	<div class="row">
 		<div class="col-md-12">
 			<div class="editor-zone">
-		    <textarea id="editor">{{ post.content }}</textarea>
+		    <textarea id="editor">{{ post.content or '' }}</textarea>
 		  </div>
 		</div>
 	</div>

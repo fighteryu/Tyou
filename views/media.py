@@ -6,9 +6,9 @@
 
 """
 import os
-import json
 from datetime import datetime
 import hashlib
+
 from flask import Blueprint, request, abort, jsonify,\
     send_from_directory, current_app
 
@@ -35,24 +35,28 @@ def medias(filename=None):
             return
 
         filename = f.filename
+        # save file to local folder, if file exists, delete it
         filepath = os.path.join(
             current_app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
         f.save(filepath)
         filesize = os.stat(filepath).st_size
 
         now = datetime.now()
-        media = Media(
-            fileid=hashlib.sha256(filename.encode("utf-8")).hexdigest(),
-            filename=filename,
-            version=0,
-            content_type=f.content_type,
-            size=filesize,
-            create_time=now,
-            display=True
-        )
-
+        # if file with same name exists, replace it
+        media = Media.get_one(Media.filename == filename)
+        if not media:
+            media = Media(
+                filename=filename
+            )
+        media.fileid = hashlib.sha256(filename.encode("utf-8")).hexdigest()
+        media.size = filesize
+        media.content_type = f.content_type
+        media.size = filesize
+        media.create_time = now
         media.save()
-        return json.dumps(
+        return jsonify(
             {"files": []})
 
     elif request.method == "DELETE":
@@ -60,10 +64,17 @@ def medias(filename=None):
         for eachfile in removelist:
             fileid = eachfile["fileid"]
             filename = eachfile["filename"]
-            onemedia = Media.get_media(fileid=fileid)
+            onemedia = Media.get_one(Media.fileid == fileid)
             if onemedia.filename != filename:
                 continue
-            onemedia.delete()
+
+            # remove file from folder
+            try:
+                os.remove(onemedia.filepath(current_app.config["UPLOAD_FOLDER"]))
+            except Exception:
+                pass
+            # remove file from database
+            onemedia.delete_instance()
         return jsonify(
             success=True,
             message="success")

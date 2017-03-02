@@ -1,5 +1,7 @@
 #!/bin/env python
 # coding:utf-8
+import functools
+from peewee import DoesNotExist
 from compat import urlparse, parse_qs
 
 
@@ -41,3 +43,16 @@ def gen_pager(current, count, pagesize, baseurl, seperator="page"):
         baseurl += "?"
     pager["baseurl"] = baseurl
     return pager
+
+
+def get_or_none(old_func):
+    """
+        get one from datebase and return None instead of raising an exception
+    """
+    @functools.wraps(old_func)
+    def new_func(*args, **kwargs):
+        try:
+            return old_func(*args, **kwargs)
+        except DoesNotExist:
+            return None
+    return new_func

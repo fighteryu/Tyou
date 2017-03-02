@@ -25,11 +25,10 @@ def index():
 @link.route("/delete", methods=['POST'])
 def delete():
     removelist = request.json
-    print(removelist)
     for link_id in removelist:
-        link = Link.get_link(id=link_id)
+        link = Link.get_one(Link.id == link_id)
         if link:
-            link.delete()
+            link.delete_instance()
     return jsonify(success=True, message="success")
 
 
@@ -37,7 +36,7 @@ def delete():
 def reverse():
     reverselist = request.json
     for link_id in reverselist:
-        link = Link.get_link(link_id=link_id)
+        link = Link.get_one(Link.id == link_id)
         if link:
             link.display = not link.display
             link.save()

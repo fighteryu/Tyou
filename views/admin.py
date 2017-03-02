@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from flask import Blueprint, render_template, g, request, abort, jsonify,\
     redirect, url_for, send_file
-from models import Post, Comment, Link, Media, User, db
+from models import Post, Comment, Link, Media, User
 from helpers import gen_pager
 from decorators import admin_required
 
@@ -25,25 +25,25 @@ def posts():
 
     page = int(args.get("page", 1))
 
-    kargs = {}
+    kwargs = {}
     if "is_original" in args and args["is_original"] == "true":
-        kargs["is_original"] = True
+        kwargs["is_original"] = True
     elif "is_original" in args and args["is_original"] == "false":
-        kargs["is_original"] = False
+        kwargs["is_original"] = False
 
     if "allow_visit" in args and args["allow_visit"] == "true":
-        kargs["allow_visit"] = True
+        kwargs["allow_visit"] = True
     elif "allow_visit" in args and args["allow_visit"] == "false":
-        kargs["allow_visit"] = False
+        kwargs["allow_visit"] = False
 
     if "allow_comment" in args and args["allow_comment"] == "true":
-        kargs["allow_comment"] = True
+        kwargs["allow_comment"] = True
     elif "allow_comment" in args and args["allow_comment"] == "false":
-        kargs["allow_comment"] = False
+        kwargs["allow_comment"] = False
 
-    posts = Post.get_page(page, order_by=Post.id.desc(), perpage=perpage, **kargs)
+    count, posts = Post.get_page(page, order_by=Post.id.desc(), limit=perpage, parameters=kwargs)
 
-    pager = gen_pager(page, Post.count(**kargs), perpage, request.url)
+    pager = gen_pager(page, count, perpage, request.url)
     return render_template('admin/posts.html',
                            posts=posts,
                            admin_url="posts",
@@ -60,7 +60,7 @@ def pageinplace():
     post_id = request.args.get("post_id", "")
     if post_id.isdigit():
         post_id = int(post_id)
-    post = Post.get_post(url=url)
+    post = Post.get_one(Post.url == url)
 
     # same post or the post doesn't exist
     if (post and post.id == post_id) or (not post):
@@ -80,7 +80,7 @@ def editpost(id=None):
     """
     if request.method == "GET":
         if id is not None:
-            post = Post.get_post(id=id)
+            post = Post.get_one(Post.id == id)
             editor = post.editor
             if not post:
                 abort(404)
@@ -96,14 +96,13 @@ def editpost(id=None):
         data = request.json
         now_time = datetime.now()
         if data['id'] is not None:
-            post = Post.get_post(id=int(data["id"]))
+            post = Post.get_one(Post.id == int(data["id"]))
         else:
             post = Post()
             post.create_time = now_time
         post.editor = data.get("editor", "markdown")
         post.update_time = now_time
         post.title = data.get("title", "")
-        post.update_tags(data.get("tags", ""))
         post.url = data.get("url", "")
         post.keywords = data.get("keywords", "")
         post.metacontent = data.get("metacontent", "")
@@ -114,30 +113,30 @@ def editpost(id=None):
         post.is_original = data.get("is_original", True)
         post.need_key = data.get("need_key", False)
         post.password = data.get("password", "")
-        db.session.add(post)
-        db.session.commit()
+        post.save()
+        post.update_tags(data.get("tags", ""))
         return jsonify(success=True, id=post.id)
 
     elif request.method == "DELETE":
         # Delete post by id
         if id is not None:
-            post = Post.get_post(id=int(id))
+            post = Post.get_one(Post.id == int(id))
             if post:
-                post.delete()
+                post.delete_instance(recursive=True)
         # Batch Delete method
         else:
             removelist = request.json
             for post_id in removelist:
-                post = Post.get_post(id=post_id)
+                post = Post.get_one(Post.id == post_id)
                 if post:
-                    post.delete()
+                    post.delete_instance(recursive=True)
         return jsonify(success=True)
 
 
 @adminor.route('/overview/<int:post_id>/')
 @admin_required
 def overview(post_id=-1):
-    post = Post.get_post(id=post_id)
+    post = Post.get_one(Post.id == post_id)
     if post:
         return render_template('page.html', admin_url="overview", post=post)
     else:
@@ -149,10 +148,10 @@ def overview(post_id=-1):
 def links():
     perpage = g.config["ADMIN_ITEM_COUNT"]
     page = int(request.args.get("page", 1))
-    linklist = Link.get_page(page, perpage=perpage)
-    pager = gen_pager(page, Link.count(), perpage, request.url)
+    count, links = Link.get_page(page, limit=perpage)
+    pager = gen_pager(page, count, perpage, request.url)
     return render_template('admin/links.html',
-                           linklist=linklist,
+                           links=links,
                            admin_url="links",
                            pager=pager
                            )
@@ -183,8 +182,8 @@ def setting():
         if not new_config["BLOGURL"].endswith("/"):
             new_config["BLOGURL"] += "/"
 
-        user = User.get_users().first()
-        user.config = json.dumps(new_config)
+        user = User.get_list().first()
+        user.config = new_config
         user.save()
         return redirect(url_for("admin.setting"))
 
@@ -194,8 +193,8 @@ def setting():
 def medias():
     page = int(request.args.get("page", 1))
     perpage = g.config["ADMIN_ITEM_COUNT"]
-    medias = Media.get_page(page, order_by=Media.id.desc(), perpage=perpage)
-    pager = gen_pager(page, Media.count(), perpage, request.url)
+    count, medias = Media.get_page(page, order_by=Media.id.desc(), limit=perpage)
+    pager = gen_pager(page, count, perpage, request.url)
     return render_template('admin/medias.html',
                            admin_url="medias",
                            medias=medias,
@@ -215,8 +214,8 @@ def comments():
             )
             pager = gen_pager(page, Comment.count(post_id), perpage, request.url)
         else:
-            comments = Comment.get_page(page, order_by=Comment.id.desc())
-            pager = gen_pager(page, Comment.count(), perpage, request.url)
+            count, comments = Comment.get_page(page, order_by=Comment.id.desc())
+            pager = gen_pager(page, count, perpage, request.url)
         return render_template('admin/comments.html',
                                comments=comments,
                                admin_url="comments",
@@ -283,7 +282,7 @@ def import_blog():
 
         for post in posts:
             # If posts exist, continue
-            new_post = Post.get_post(url=post["url"])
+            new_post = Post.get_one(Post.url == post["url"])
             if new_post:
                 continue
             else:

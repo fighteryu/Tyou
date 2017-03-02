@@ -74,10 +74,10 @@ function gen_comment_obj(obj){
 	newcomment.email=$("#email").val();
 	newcomment.content=$("#newcomment").val();
 	newcomment.website=$("#website").val();
-	newcomment.refid=null;
+	newcomment.parent_comment_id=null;
 	obj=$(obj).parent().parent().parent().parent();
 	if(!obj.hasClass("bigwidget")){
-		newcomment.refid=obj.children(".c-content").attr("_id");
+		newcomment.parent_comment_id=obj.children(".c-content").attr("_id");
 	}
 	newcomment.post_id=$("#post_id").val();
 	newcomment=JSON.stringify(newcomment);

@@ -42,17 +42,10 @@ def configure_modules(app):
 
 
 def configure_db(app):
-    db.init_app(app)
-
-    @app.teardown_appcontext
-    def shutdown_sesion(exception=None):
-        db.session.remove()
+    return app
 
 
 def configure_before_handlers(app):
-    @app.before_first_request
-    def init_db():
-        db.create_all()
 
     @app.before_first_request
     def create_upload_folder():
@@ -77,11 +70,7 @@ def configure_before_handlers(app):
 
 
 def configure_after_handlers(app):
-
-    @app.after_request
-    def auto_commit(response):
-        db.session.commit()
-        return response
+    return app
 
 
 def configure_errorhandlers(app):
@@ -127,7 +116,6 @@ def register_manage_command(app):
         create user
         """
         User.create_user(kwargs["username"], kwargs["password"])
-        db.session.commit()
         print("create user done")
 
     @app.cli.command()
@@ -136,7 +124,6 @@ def register_manage_command(app):
         """delete current user, blog posts won't be deleted
         """
         User.delete_user(kwargs["username"])
-        db.session.commit()
         print("delete user done")
 
     return app

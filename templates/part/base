@@ -9,6 +9,7 @@
 		{%block meta%}{%endblock meta%}
 		<link rel="alternate" type="application/rss+xml" title="文章订阅" href="{{g.config.BLOGURL}}rss">
 		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css?version={{g.version}}"/>
+		<script type="text/javascript" src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
 	</head>
 	<body>
 	{%block topbar%}{%include "/part/topbar"%}{%endblock topbar%}
@@ -38,7 +39,6 @@
 		  ga('send', 'pageview');
 		</script>
 		{%endblock analytics%}
-		<script type="text/javascript" src="//cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
 		<script type="text/javascript" src="//cdn.bootcss.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="/static/js/main.js?version={{g.version}}"></script>
 		{%block extrafiles%}{%endblock extrafiles%}

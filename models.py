@@ -13,56 +13,70 @@ import hashlib
 import markdown2
 from datetime import datetime
 
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
-from flask.globals import g
+import peewee
+from peewee import fn
+from playhouse.kv import JSONField
 
+import config
+from helpers import get_or_none
 
-db = SQLAlchemy()
+db = peewee.SqliteDatabase('tyou.db')
 
 
 class ModelMixin():
     @classmethod
-    def get_page(cls, page, **kwargs):
-        perpage = kwargs.pop("perpage", None) or g.config["PER_PAGE"]
-        offset = perpage * (page - 1)
+    @get_or_none
+    def get_one(cls, *args):
+        return cls.select().where(*args).get() if args else cls.get()
 
-        order_by = kwargs.pop("order_by", None)
+    @classmethod
+    def get_list(cls, *args):
+        return cls.select().where(*args) if args else cls.select()
 
-        query = cls.query.filter_by(**kwargs)
-        if order_by is not None:
-            query = query.order_by(order_by)
-        return query.offset(offset).limit(perpage)
+    @classmethod
+    def get_page(cls, page, *args, **kwargs):
+        """
+        get paginated records
+        eg:
+            Model.get_page(page=1, order_by=Model.id, limit=12)
+        """
+        limit = kwargs.get("limit", 0) or config.PER_PAGE
+        parameters = kwargs.get("parameters", {})
 
-    def save(self):
-        db.session.add(self)
+        # convert parmeters to peewee language
+        additional_args = []
+        for key, value in parameters.items():
+            additional_args.append(getattr(cls, key) == value)
 
-    def delete(self):
-        db.session.delete(self)
+        query = cls.get_list(*args, *additional_args)
+        if "order_by" in kwargs:
+            query = query.order_by(kwargs["order_by"])
+
+        count = query.count()
+        items = query.paginate(page, limit)
+        return count, items
 
 
-class User(ModelMixin, db.Model):
-
+class User(peewee.Model, ModelMixin):
     """setting = {
     page
     }
     """
+    id = peewee.PrimaryKeyField()
+    username = peewee.CharField(max_length=20, index=True)
+    password = peewee.CharField(max_length=256)
+    salt = peewee.CharField(max_length=20)
+    config = JSONField()
+    created_at = peewee.DateTimeField(default=datetime.utcnow)
 
-    __tablename__ = "user"
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), index=True)
-    password = db.Column(db.String(256))
-    salt = db.Column(db.String(20))
-    config = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    class Meta:
+        database = db
+        db_table = "user"
 
     @classmethod
     def get_config(cls):
-        user = cls.query.first()
-        if user and user.config:
-            return json.loads(user.config)
-        return None
+        user = cls.select().first()
+        return user.config if user and user.config else None
 
     def validate(self, password):
         hashed_password, salt = self.generate_salt_and_hash_password(password, self.salt)
@@ -93,118 +107,57 @@ class User(ModelMixin, db.Model):
     @classmethod
     def delete_user(cls, username):
         user = cls.get_user(username=username)
-        db.session.delete(user)
-        db.session.commit()
-
-    @classmethod
-    def get_user(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).one_or_none()
-
-    @classmethod
-    def get_users(cls, **kwargs):
-        return cls.query.filter_by(**kwargs)
+        user.delete_instance()
 
 
-class Post(ModelMixin, db.Model):
-    __tablename__ = "post"
-    id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(512), unique=True)
-    title = db.Column(db.String(512))
-    raw_content = db.Column(db.Text)
-    content = db.Column(db.Text)
-    keywords = db.Column(db.String(256), default="")
-    metacontent = db.Column(db.String(256), default="")
-    create_time = db.Column(db.DateTime, default=datetime.now)
-    update_time = db.Column(db.DateTime, default=datetime.now)
+class Post(peewee.Model, ModelMixin):
+    id = peewee.PrimaryKeyField()
+    url = peewee.CharField(max_length=256, unique=True)
+    title = peewee.CharField(max_length=256)
+    raw_content = peewee.TextField()
+    content = peewee.TextField()
+    keywords = peewee.CharField(max_length=256, default="")
+    metacontent = peewee.CharField(max_length=256, default="")
+    create_time = peewee.DateTimeField(default=datetime.now)
+    update_time = peewee.DateTimeField(default=datetime.now)
     # required if need_key is True
-    password = db.Column(db.String(20), default="")
+    password = peewee.CharField(max_length=20, default="")
     # tag seperated by comma
-    tags = db.Column(db.String(256), default="")
+    tags = peewee.CharField(max_length=256, default="")
     # editor html or markdown
-    editor = db.Column(db.String(10))
-    allow_visit = db.Column(db.Boolean, default=True)
-    allow_comment = db.Column(db.Boolean, default=True)
-    need_key = db.Column(db.Boolean, default=True)
-    is_original = db.Column(db.Boolean, default=True)
-    num_lookup = db.Column(db.Integer, default=0)
+    editor = peewee.CharField(max_length=10, choices=("html", "markdown"))
+    allow_visit = peewee.BooleanField(default=False)
+    allow_comment = peewee.BooleanField(default=True)
+    need_key = peewee.BooleanField(default=False)
+    is_original = peewee.BooleanField(default=True)
+    num_lookup = peewee.IntegerField(default=0)
 
-    def __init__(self, **kwargs):
-        defaults = {
-            "url": "",
-            "title": "",
-            "raw_content": "",
-            "content": "",
-            "keywords": "",
-            "metacontent": "",
-            "password": "",
-            "tags": "",
-            "editor": "markdown",
-            "allow_visit": False,
-            "allow_comment": True,
-            "need_key": False,
-            "is_original": True,
-            "num_lookup": False
-        }
-
-        for key, value in kwargs.items():
-            defaults.set_default(key, value)
-
-        for key, value in defaults.items():
-            setattr(self, key, value)
-
-    @classmethod
-    def get_post(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).one_or_none()
-
-    @classmethod
-    def get_posts(cls, **kwargs):
-        return cls.query.filter_by(**kwargs)
-
-    @classmethod
-    def count(cls, **kargs):
-        query = cls.query
-        for key in kargs:
-            query = query.filter(cls.__dict__[key] == kargs[key])
-        return query.count()
+    class Meta:
+        database = db
+        db_table = "post"
 
     @classmethod
     def tag_search(cls, keyword, offset, limit):
         if not keyword:
             return []
-        return cls.query.filter_by(allow_visit=True).\
-            filter(cls.tags.like("%,"+keyword+",%")).\
-            order_by(cls.id.desc()).offset(offset).limit(limit).all()
-
-    @classmethod
-    def tag_search_count(cls, keyword):
-        if not keyword:
-            return 0
-        return cls.query.filter_by(allow_visit=True).\
-            filter(cls.tags.like("%,"+keyword+",%")).count()
+        query = cls.select().join(Tag).where(
+            Post.allow_visit == True, Tag.name == keyword
+        ).order_by(-Post.id)
+        return query.count(), query.offset(offset).limit(limit)
 
     @classmethod
     def text_search(cls, words, offset, limit):
         if len(words) == 0 or len(words) > 5:
             return []
-        query = cls.query.filter_by(allow_visit=True)
-        for word in words:
-            query = query.filter(or_(
-                cls.raw_content.like("%" + word + "%"),
-                cls.title.like("%" + word + "%")
-            ))
-        return query.order_by(cls.id.desc()).offset(offset).limit(limit).all()
 
-    @classmethod
-    def text_search_count(cls, words):
-        if len(words) == 0 or len(words) > 5:
-            return 0
-        query = cls.query.filter_by(allow_visit=True)
+        query = cls.select().where(Post.allow_visit == True)
         for word in words:
-            query = query.filter(or_(
-                cls.raw_content.like("%" + word + "%"),
-                cls.title.like("%" + word + "%")
-            ))
-        return query.count()
+            query = query.where(
+                cls.raw_content.contains(word) |
+                cls.title.contains(word)
+            )
+        query = query.order_by(-cls.id)
+        return query.count(), query.offset(offset).limit(limit)
 
     @classmethod
     def gen_raw_content(cls, content, editor):
@@ -255,12 +208,20 @@ class Post(ModelMixin, db.Model):
             and after "abc,123", so we can do the follwoing mysql search
                 `select * from tag where name like '%,tagname,%'`
         """
-        tagnames = set(new_string.split(",") + self.tags.split(","))
-        for tagname in tagnames:
-            Tag.update_tag(tagname)
+        if self.tags == new_string:
+            return
 
-        self.tags = self.to_tags(new_string.split(","))
-        return self.tags
+        #  delete old tags
+        Tag.delete().where(Tag.post == self).execute()
+
+        # create new tags one by one
+        tagnames = new_string.split(",")
+        tagnames = [i.strip() for i in tagnames if i]
+        for tagname in tagnames:
+            Tag.get_or_create_tag(self, tagname)
+
+        self.tags = new_string
+        self.save()
 
     def delete_tags(self):
         """Set Post.tags to "", this function will also deduce the count in Tag
@@ -268,149 +229,88 @@ class Post(ModelMixin, db.Model):
         return self.update_tags("")
 
     def delete_comments(self):
-        comments = Comment.get_comments(post_id=self.id)
+        comments = Comment.get_list(Comment.post == self)
         for comment in comments:
             comment.delete()
 
-    def delete(self):
-        self.delete_tags()
-        self.delete_comments()
-        db.session.delete(self)
-        db.session.commit()
 
+class Tag(peewee.Model, ModelMixin):
 
-class Tag(ModelMixin, db.Model):
-    __tablename__ = "tag"
+    id = peewee.PrimaryKeyField()
+    name = peewee.CharField(max_length=64)
+    post = peewee.ForeignKeyField(Post, related_name="sub_tags")
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
-    count = db.Column(db.Integer, default=1)
+    class Meta:
+        database = db
+        db_table = "tag"
 
-    @classmethod
-    def get_tag(self, **kwargs):
-        return Tag.query.filter_by(**kwargs).one_or_none()
+        indexes = (
+            (("name", "post"), True)
+        )
 
     @classmethod
-    def get_tags(self, **kwargs):
-        return Tag.query.filter_by(**kwargs)
-
-    @classmethod
-    def update_tag(cls, tagname):
-        tagname = tagname.strip()
+    def get_or_create_tag(cls, post, tagname):
         if not tagname:
             return
-
-        tag_count = Post.query.filter(Post.tags.like("%,{},%".format(tagname))).count()
-        if tag_count == 0:
-            cls.delete_tag(tagname)
-        else:
-            cls.update_or_create_tag(tagname, tag_count)
+        return Tag.get_or_create(post=post, name=tagname)
 
     @classmethod
     def delete_tag(cls, tagname):
-        tag = cls.get_tag(name=tagname)
-        if tag:
-            db.session.delete(tag)
-
-    @classmethod
-    def update_or_create_tag(cls, tagname, count):
-        tag = cls.get_tag(name=tagname)
-        if not tag:
-            tag = cls(name=tagname, count=count)
-        tag.count = count
-        db.session.add(tag)
+        cls.delete().where(Tag.name == tagname)
 
 
-class Comment(ModelMixin, db.Model):
-    __tablename__ = "comment"
-    id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    post = db.relationship("Post", backref="comments")
-    email = db.Column(db.String(64))
-    nickname = db.Column(db.String(20))
-    content = db.Column(db.String(1024))
-    refid = db.Column(db.Integer, db.ForeignKey('comment.id'))
-    to = db.Column(db.String(20))
-    create_time = db.Column(db.DateTime, default=datetime.now)
-    ip = db.Column(db.String(64))
-    website = db.Column(db.String(64))
+class Comment(peewee.Model, ModelMixin):
+    id = peewee.PrimaryKeyField()
+    post = peewee.ForeignKeyField(Post, related_name="comments")
+    email = peewee.CharField(max_length=64)
+    nickname = peewee.CharField(max_length=20)
+    content = peewee.CharField(max_length=1024)
+    parent_comment = peewee.ForeignKeyField('self', null=True, related_name="sub_comments")
+    to = peewee.CharField(max_length=20)
+    create_time = peewee.DateTimeField(default=datetime.now)
+    ip = peewee.CharField(max_length=64)
+    website = peewee.CharField(max_length=64)
 
-    @classmethod
-    def count(cls):
-        return cls.query.count()
-
-    @classmethod
-    def get_comment(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).one_or_none()
-
-    @classmethod
-    def get_comments(cls, **kwargs):
-        return cls.query.filter_by(**kwargs)
+    class Meta:
+        database = db
+        db_table = "comment"
 
 
-class Link(ModelMixin, db.Model):
-    __tablename__ = "link"
+class Link(peewee.Model, ModelMixin):
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
-    href = db.Column(db.String(1024))
-    description = db.Column(db.String(64))
-    create_time = db.Column(db.DateTime)
-    display = db.Column(db.Boolean)
+    id = peewee.PrimaryKeyField()
+    name = peewee.CharField(max_length=64)
+    href = peewee.CharField(max_length=1024)
+    description = peewee.CharField(max_length=64)
+    create_time = peewee.DateTimeField(default=datetime.utcnow)
+    display = peewee.BooleanField()
 
-    @classmethod
-    def get_link(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).one_or_none()
-
-    @classmethod
-    def get_links(cls, **kwargs):
-        return cls.query.filter_by(**kwargs)
-
-    @classmethod
-    def count(cls):
-        return cls.query.count()
+    class Meta:
+        database = db
+        db_table = "link"
 
 
-class Media(ModelMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    fileid = db.Column(db.String(64))
-    filename = db.Column(db.String(64))
+class Media(peewee.Model, ModelMixin):
+    id = peewee.PrimaryKeyField()
+    fileid = peewee.CharField(max_length=64, unique=True)
+    filename = peewee.CharField(max_length=64)
     # For a give filename , there could be multi file exits
-    version = db.Column(db.Integer)
-    content_type = db.Column(db.String(32))
-    size = db.Column(db.Integer)
-    create_time = db.Column(db.DateTime)
-    display = db.Column(db.Boolean)
+    version = peewee.IntegerField(default=0)
+    content_type = peewee.CharField(max_length=32)
+    size = peewee.IntegerField()
+    create_time = peewee.DateTimeField()
+    display = peewee.BooleanField(default=True)
 
-    @classmethod
-    def get_media(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).one_or_none()
-
-    @classmethod
-    def get_medias(cls, **kwargs):
-        return cls.query.filter_by(**kwargs)
+    class Meta:
+        database = db
+        db_table = "media"
 
     def filepath(self, upload_folder):
         return os.path.join(upload_folder, self.local_filename)
 
     @property
     def local_filename(self):
-        return "f"+str(self.version)+self.filename
-
-    @classmethod
-    def count(cls):
-        return cls.query.count()
-
-    def delete(self):
-        import config
-        filepath = self.filepath(config.UPLOAD_FOLDER)
-        try:
-            os.remove(filepath)
-        except Exception:
-            pass
-        db.session.delete(self)
-        db.session.commit()
-
+        return self.filename
 
 def gen_sidebar(config):
     rr = {
@@ -419,15 +319,18 @@ def gen_sidebar(config):
         "links": None
     }
 
-    tags = Tag.get_tags().order_by(Tag.count.desc()).limit(config["TAG_COUNT"])
+    tags = Tag.select(
+        Tag.name, fn.COUNT(Tag.name).alias("count")
+    ).group_by(Tag.name).order_by(-fn.COUNT(Tag.name)).limit(config["TAG_COUNT"])
+
     rr["tags"] = tags
-    comments = Comment.get_comments().options(db.subqueryload(Comment.post)).\
+    comments = Comment.get_list().\
         order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
     rr["comments"] = comments
-    links = Link.get_links(display=True).order_by(Link.id.desc()).limit(config["LINK_COUNT"])
+    links = Link.get_list(Link.display == True).order_by(Link.id.desc()).limit(config["LINK_COUNT"])
     rr["links"] = links
 
-    announce = Post.get_post(id=config["ANNOUNCE_ID"])
+    announce = Post.get_one(Post.id == config["ANNOUNCE_ID"])
     rr["announce"] = announce
     rr["announce_length"] = config["ANNOUNCE_LENGTH"]
     return rr
@@ -435,15 +338,15 @@ def gen_sidebar(config):
 
 def export_all():
     """export all blog data"""
-    postlist = Post.query.all()
-    linklist = Link.query.all()
-    medialist = Media.query.all()
+    postlist = Post.select().all()
+    linklist = Link.select().all()
+    medialist = Media.select().all()
 
     ex_post = []
     for post in postlist:
         # Back up all comments
         ex_comment = []
-        commentlist = Comment.get_comments(post_id=post.id)
+        commentlist = Comment.get_list(post_id=post.id)
         for comment in commentlist:
             ex_comment.append({
                 "id": comment.id,
@@ -452,7 +355,7 @@ def export_all():
                 "nickname": comment.nickname,
                 "content": comment.content,
                 "to": comment.to,
-                "refid": comment.refid,
+                "parent_comment_id": comment.parent_comment_id,
                 "create_time": int(comment.create_time.strftime("%s")),
                 "ip": comment.ip,
                 "website": comment.website

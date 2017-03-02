@@ -18,9 +18,8 @@ from compat import unquote
 @frontend.route("/index")
 def index():
     page = int(request.args.get("page", 1))
-    posts = Post.get_page(page, allow_visit=True, order_by=Post.id.desc())
-    pager = gen_pager(page, Post.count(allow_visit=True), g.config["PER_PAGE"],
-                      request.url)
+    count, posts = Post.get_page(page, Post.allow_visit == True, order_by=-Post.id)
+    pager = gen_pager(page, count, g.config["PER_PAGE"], request.url)
     if posts or page == 1:
         return render_template(
             "index.html",
@@ -34,23 +33,23 @@ def index():
 @frontend.route('/page/<url>')
 def page(url=None):
     """display post"""
-    post = Post.get_post(url=url)
-    if post and post.allow_visit:
-        comments = Comment.get_comments(post_id=post.id).order_by(Comment.id.desc())
-        return render_template(
-            'page.html',
-            blogname=g.config["BLOGNAME"],
-            post=post,
-            comments=comments)
-    else:
+    post = Post.get_one(Post.url == url)
+    if not post or not post.allow_visit:
         abort(404)
+
+    comments = Comment.get_list(Comment.post_id == post.id).order_by(-Comment.id)
+    return render_template(
+        'page.html',
+        blogname=g.config["BLOGNAME"],
+        post=post,
+        comments=comments)
 
 
 @frontend.route("/key", methods=["POST"])
 @frontend.route("/key/", methods=["POST"])
 def key():
     data = request.json
-    post = Post.get_post(url=data.get("posturl", ""))
+    post = Post.get_one(Post.url == data.get("posturl", ""))
     if not post:
         return jsonify(
             validate=False,
@@ -85,14 +84,14 @@ def comment():
         content = usercomment["content"]
         website = usercomment["website"]
         post_id = usercomment["post_id"]
-        refid = None
+        parent_comment_id = None
         to = None
-        if usercomment.get("refid", None):
-            refid = int(usercomment["refid"])
-            refcomment = Comment.get_comment(id=refid)
-            if refcomment:
-                to = refcomment.nickname
-        post = Post.query.filter_by(id=post_id).first()
+        if usercomment.get("parent_comment_id", None):
+            parent_comment_id = int(usercomment["parent_comment_id"])
+            parent_comment = Comment.get_one(Comment.id == parent_comment_id)
+            if parent_comment:
+                to = parent_comment.nickname
+        post = Post.get_one(Post.id == post_id)
         if not post or post.allow_visit is False:
             return jsonify(has_error=True, message="文章不存在")
         elif post.allow_comment is False:
@@ -103,7 +102,7 @@ def comment():
             nickname=nickname,
             content=unquote(content),
             to=to,
-            refid=refid,
+            parent_comment_id=parent_comment_id,
             ip=request.remote_addr,
             website=website)
         comment.save()
@@ -131,7 +130,7 @@ def login():
             flash("用户名密码错误")
             return redirect(url_for('.login'))
 
-        user = User.get_user(username=username.split()[0])
+        user = User.get_one(User.username == username.split()[0])
         if not user or not user.validate(password):
             flash("用户名密码错误")
             return redirect(url_for('.login'))
