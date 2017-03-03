@@ -9,15 +9,6 @@ import os
 
 
 DEBUG = True
-########
-# config for database
-
-SQLALCHEMY_DATABASE_URI = "mysql://username:password@localhost:3306/tyou"
-SQLALCHEMY_DATABASE_URI = "sqlite:////path to database/tyou.db"
-# SQLALCHEMY_ECHO = True
-SQLALCHEMY_ECHO = False
-SQLALCHEMY_TRACK_MODIFICATIONS = False
-
 try:
     from secret_keys import SESSION_KEY as SECRET_KEY
 except Exception:
