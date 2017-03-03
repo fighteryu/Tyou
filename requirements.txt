@@ -5,3 +5,4 @@ gunicorn==19.6.0
 
 flask-shell-bpython==0.0.1
 markdown2==2.3.3
+blinker==1.4
