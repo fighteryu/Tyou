@@ -12,12 +12,15 @@ import hashlib
 import markdown2
 from datetime import datetime
 
+from flask import current_app
 import peewee
 from peewee import fn
 from playhouse.kv import JSONField
 
 import config
 from helpers import get_or_none
+from signals import signal_update_sidebar
+
 
 db = peewee.SqliteDatabase('tyou.db')
 
@@ -107,6 +110,67 @@ class User(peewee.Model, ModelMixin):
     def delete_user(cls, username):
         user = cls.get_one(User.username == username)
         user.delete_instance()
+
+    @classmethod
+    def get_sidebar(cls):
+        """
+        generate sidebar if it does not exist or it has expired
+        """
+        if not hasattr(cls, "sidebar"):
+            cls.generate_sidebar()
+        sidebar = getattr(cls, "sidebar")
+        if sidebar["expired_at"] <= time.time():
+            sidebar = cls.generate_sidebar()
+        return sidebar["data"]
+
+    @classmethod
+    def update_sidebar(cls, *args, **kwargs):
+        """
+        subscribe to a signal and update sidebar when needed
+        """
+        cls.generate_sidebar()
+
+    @classmethod
+    def generate_sidebar(cls):
+        """
+        User.sidebar = {
+            "exipred_at": timestamp,
+            "data": {}
+        }
+        """
+        config = cls.get_config() or current_app.config
+
+        rr = {
+            "tags": None,
+            "comments": None,
+            "links": None,
+            "announce": None,
+            "announce_length": 0
+        }
+
+        tags = Tag.select(
+            Tag.name, fn.COUNT(Tag.name).alias("count")
+        ).group_by(Tag.name).order_by(-fn.COUNT(Tag.name)).limit(config["TAG_COUNT"])
+        rr["tags"] = tags
+
+        comments = Comment.get_list().\
+            order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
+        rr["comments"] = comments
+
+        links = Link.get_list(
+            Link.display == True
+        ).order_by(Link.id.desc()).limit(config["LINK_COUNT"])
+        rr["links"] = links
+
+        announce = Post.get_one(Post.id == config["ANNOUNCE_ID"])
+        rr["announce"] = announce
+        rr["announce_length"] = config["ANNOUNCE_LENGTH"]
+
+        cls.sidebar = {
+            "data": rr,
+            "expired_at": time.time() + 8 * 60 * 60
+        }
+        return cls.sidebar
 
 
 class Post(peewee.Model, ModelMixin):
@@ -298,25 +362,4 @@ class Media(peewee.Model, ModelMixin):
         return self.filename
 
 
-def gen_sidebar(config):
-    rr = {
-        "tags": None,
-        "comments": None,
-        "links": None
-    }
-
-    tags = Tag.select(
-        Tag.name, fn.COUNT(Tag.name).alias("count")
-    ).group_by(Tag.name).order_by(-fn.COUNT(Tag.name)).limit(config["TAG_COUNT"])
-
-    rr["tags"] = tags
-    comments = Comment.get_list().\
-        order_by(Comment.id.desc()).limit(config["COMMENT_COUNT"])
-    rr["comments"] = comments
-    links = Link.get_list(Link.display == True).order_by(Link.id.desc()).limit(config["LINK_COUNT"])
-    rr["links"] = links
-
-    announce = Post.get_one(Post.id == config["ANNOUNCE_ID"])
-    rr["announce"] = announce
-    rr["announce_length"] = config["ANNOUNCE_LENGTH"]
-    return rr
+signal_update_sidebar.connect(User.update_sidebar)

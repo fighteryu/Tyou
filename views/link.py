@@ -6,7 +6,10 @@
 
 """
 from flask import Blueprint, request, jsonify
+
+from signals import signal_update_sidebar
 from models import Link
+
 link = Blueprint('link', __name__, template_folder="../templates")
 
 
@@ -29,6 +32,7 @@ def delete():
         link = Link.get_one(Link.id == link_id)
         if link:
             link.delete_instance()
+    signal_update_sidebar.send()
     return jsonify(success=True, message="success")
 
 
@@ -40,4 +44,6 @@ def reverse():
         if link:
             link.display = not link.display
             link.save()
+
+    signal_update_sidebar.send()
     return jsonify(success=True, message="success")

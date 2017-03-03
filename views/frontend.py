@@ -10,8 +10,9 @@ from flask import request, jsonify, g, abort, render_template,\
 
 from models import Post, Comment, User
 from helpers import gen_pager
-from .other import frontend
 from compat import unquote
+from signals import signal_update_sidebar
+from .other import frontend
 
 
 @frontend.route('/')
@@ -75,6 +76,7 @@ def comment():
             comment = Comment.get_one(Comment.id == comment_id)
             if comment:
                 comment.delete_instance()
+        signal_update_sidebar.send()
         return jsonify(success=True, message="success")
     elif request.method == "POST":
         usercomment = request.json
@@ -113,6 +115,7 @@ def comment():
         session["website"] = website
         session["email"] = email
 
+        signal_update_sidebar.send()
         return jsonify(success=True, message="success")
 
 

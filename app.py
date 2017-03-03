@@ -10,7 +10,7 @@ import click
 from flask import Flask, g, request, jsonify, render_template, session
 
 import config
-from models import gen_sidebar, User
+from models import User
 from views import MODULES
 from compat import quote
 
@@ -66,7 +66,7 @@ def configure_before_handlers(app):
         if request.method != "GET":
             return
 
-        g.sidebar = gen_sidebar(g.config)
+        g.sidebar = User.get_sidebar()
 
 
 def configure_after_handlers(app):

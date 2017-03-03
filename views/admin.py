@@ -15,6 +15,8 @@ from flask import(
 from models import Post, Comment, Link, Media, User
 from helpers import gen_pager
 from decorators import admin_required
+from signals import signal_update_sidebar
+
 
 adminor = Blueprint('admin', __name__, template_folder="../templates")
 
@@ -187,6 +189,7 @@ def setting():
         user = User.get_list().first()
         user.config = new_config
         user.save()
+        signal_update_sidebar.send()
         return redirect(url_for("admin.setting"))
 
 
