@@ -10,7 +10,7 @@ import click
 from flask import Flask, g, request, jsonify, render_template, session
 
 import config
-from models import db, gen_sidebar, User
+from models import gen_sidebar, User
 from views import MODULES
 from compat import quote
 

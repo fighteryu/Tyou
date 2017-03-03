@@ -72,11 +72,10 @@ def comment():
             abort(401)
         removelist = request.json
         for comment_id in removelist:
-            comment = Comment.get_comment(id=comment_id)
+            comment = Comment.get_one(Comment.id == comment_id)
             if comment:
-                comment.delete()
-        return jsonify(success=True,
-                       message="success")
+                comment.delete_instance()
+        return jsonify(success=True, message="success")
     elif request.method == "POST":
         usercomment = request.json
         nickname = usercomment["nickname"]
@@ -104,7 +103,8 @@ def comment():
             to=to,
             parent_comment_id=parent_comment_id,
             ip=request.remote_addr,
-            website=website)
+            website=website
+        )
         comment.save()
 
         # keep username, website, email to session

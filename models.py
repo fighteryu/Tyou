@@ -8,7 +8,6 @@
 import os
 import re
 import time
-import json
 import hashlib
 import markdown2
 from datetime import datetime
@@ -91,7 +90,7 @@ class User(peewee.Model, ModelMixin):
 
     @classmethod
     def create_user(cls, username, password):
-        users = cls.get_user(username=username)
+        users = cls.get_list(User.username == username)
         if users:
             raise Exception("{} already exists, please choose another".format(username))
 
@@ -106,7 +105,7 @@ class User(peewee.Model, ModelMixin):
 
     @classmethod
     def delete_user(cls, username):
-        user = cls.get_user(username=username)
+        user = cls.get_one(User.username == username)
         user.delete_instance()
 
 
@@ -223,16 +222,6 @@ class Post(peewee.Model, ModelMixin):
         self.tags = new_string
         self.save()
 
-    def delete_tags(self):
-        """Set Post.tags to "", this function will also deduce the count in Tag
-        """
-        return self.update_tags("")
-
-    def delete_comments(self):
-        comments = Comment.get_list(Comment.post == self)
-        for comment in comments:
-            comment.delete()
-
 
 class Tag(peewee.Model, ModelMixin):
 
@@ -253,10 +242,6 @@ class Tag(peewee.Model, ModelMixin):
         if not tagname:
             return
         return Tag.get_or_create(post=post, name=tagname)
-
-    @classmethod
-    def delete_tag(cls, tagname):
-        cls.delete().where(Tag.name == tagname)
 
 
 class Comment(peewee.Model, ModelMixin):
@@ -312,6 +297,7 @@ class Media(peewee.Model, ModelMixin):
     def local_filename(self):
         return self.filename
 
+
 def gen_sidebar(config):
     rr = {
         "tags": None,
@@ -334,83 +320,3 @@ def gen_sidebar(config):
     rr["announce"] = announce
     rr["announce_length"] = config["ANNOUNCE_LENGTH"]
     return rr
-
-
-def export_all():
-    """export all blog data"""
-    postlist = Post.select().all()
-    linklist = Link.select().all()
-    medialist = Media.select().all()
-
-    ex_post = []
-    for post in postlist:
-        # Back up all comments
-        ex_comment = []
-        commentlist = Comment.get_list(post_id=post.id)
-        for comment in commentlist:
-            ex_comment.append({
-                "id": comment.id,
-                "post_id": comment.post_id,
-                "email": comment.email,
-                "nickname": comment.nickname,
-                "content": comment.content,
-                "to": comment.to,
-                "parent_comment_id": comment.parent_comment_id,
-                "create_time": int(comment.create_time.strftime("%s")),
-                "ip": comment.ip,
-                "website": comment.website
-            })
-
-        ex_post.append({
-            "id": post.id,
-            "url": post.url,
-            "title": post.title,
-            "content": post.content,
-            "keywords": post.keywords,
-            "metacontent": post.metacontent,
-            "create_time": int(post.create_time.strftime("%s")),
-            "update_time": int(post.update_time.strftime("%s")),
-            "tags": post.tags,
-            "allow_visit": post.allow_visit,
-            "allow_comment": post.allow_comment,
-            "need_key": post.need_key,
-            "is_original": post.is_original,
-            "editor": post.editor,
-            "num_lookup": post.num_lookup,
-            "commentlist": ex_comment
-        })
-
-    # Backup all links
-    ex_link = []
-    for link in linklist:
-        ex_link.append({
-            "id": link.id,
-            "name": link.name,
-            "href": link.href,
-            "description": link.description,
-            "create_time": int(link.create_time.strftime("%s")),
-            "display": link.display,
-        })
-
-    # Backup all media
-    ex_media = []
-    for media in medialist:
-        ex_media.append({
-            "fileid": media.fileid,
-            "filename": media.filename,
-            "version": media.version,
-            "content_type": media.content_type,
-            "size": media.size,
-            "create_time": int(media.create_time.strftime("%s")),
-            "display": media.display
-        })
-
-    return json.dumps(
-        {
-            "links": ex_link,
-            "posts": ex_post,
-            "medias": ex_media
-        },
-        sort_keys=True,
-        indent=4,
-        separators=(',', ': '))

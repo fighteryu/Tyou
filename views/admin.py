@@ -5,11 +5,13 @@
     ~~~~~~~~~~
 
 """
-import re
-import json
 from datetime import datetime
-from flask import Blueprint, render_template, g, request, abort, jsonify,\
-    redirect, url_for, send_file
+
+from flask import(
+    Blueprint, render_template, g, request, abort, jsonify,
+    redirect, url_for
+)
+
 from models import Post, Comment, Link, Media, User
 from helpers import gen_pager
 from decorators import admin_required
@@ -220,100 +222,3 @@ def comments():
                                comments=comments,
                                admin_url="comments",
                                pager=pager)
-
-
-@adminor.route("/export", methods=["GET"])
-@admin_required
-def export_blog():
-    # compress data and send as zip
-    from models import export_all
-    data = export_all()
-    from io import BytesIO
-    import zipfile
-    filename = g.config["BLOGNAME"] + datetime.now().strftime("%Y%m%d%H%M")
-    memory_file = BytesIO()
-    with zipfile.ZipFile(memory_file, 'w') as zf:
-        zf.writestr(filename + ".json", data)
-    memory_file.seek(0)
-    return send_file(memory_file,
-                     attachment_filename=filename + ".zip", as_attachment=True)
-
-
-@adminor.route("/import", methods=["POST"])
-def import_blog():
-    f = request.files["file"]
-
-    try:
-        data = f.stream.read().decode("utf-8")
-        data = json.loads(data)
-        links = data.pop("links", [])
-        medias = data.pop("medias", [])
-        posts = data.pop("posts", [])
-
-        for link in links:
-            new_link = Link.get_link(href=link["href"])
-            if new_link:
-                continue
-            else:
-                new_link = Link()
-
-            for item in link:
-                new_link.__dict__[item] = link[item]
-            new_link.link_id = None
-            new_link.create_time = \
-                datetime.fromtimestamp(new_link.create_time)
-            new_link.save()
-
-        for media in medias:
-            new_media = Media.get_media(fileid=media["fileid"])
-            if new_media:
-                continue
-            else:
-                new_media = Media()
-
-            for item in media:
-                new_media.__dict__[item] = media[item]
-
-            # Notice, media id should not be set to None
-            new_media.media_id = None
-            new_media.create_time = \
-                datetime.fromtimestamp(new_media.create_time)
-            new_media.save()
-
-        for post in posts:
-            # If posts exist, continue
-            new_post = Post.get_one(Post.url == post["url"])
-            if new_post:
-                continue
-            else:
-                new_post = Post()
-
-            for item in post:
-                new_post.__dict__[item] = post[item]
-            new_post.id = None
-            new_post.create_time = \
-                datetime.fromtimestamp(new_post.create_time)
-            new_post.update_time = \
-                datetime.fromtimestamp(new_post.update_time)
-
-            new_post.raw_content = re.sub('<[^<]+?>', "", new_post.content)
-            newtags = new_post.tags
-            new_post.tags = ""
-            new_post.update_tags(newtags)
-            new_post.save()
-
-            # Restore all posts
-            comments = post["commentlist"]
-            for comment in comments:
-                new_comment = Comment()
-                for item in comment:
-                    new_comment.__dict__[item] = comment[item]
-                new_comment.post_id = new_post.id
-                new_comment.comment_id = None
-                new_comment.create_time = \
-                    datetime.fromtimestamp(new_comment.create_time)
-                new_comment.save()
-    except Exception as e:
-        return str(e)
-
-    return "Done"
